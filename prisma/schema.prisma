@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Editor {
+  id             String          @id @default(cuid())
+  name           String
+  avatar         String?
+  description    String
+  accentColor    String          @default("#3B82F6")
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  portfolioItems PortfolioItem[]
+}
+
+model PortfolioItem {
+  id        String   @id @default(cuid())
+  title     String
+  category  String
+  youtubeId String
+  editorId  String
+  editor    Editor   @relation(fields: [editorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       String
+  isPopular   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  clientName String
+  text       String
+  rating     Int?
+  createdAt  DateTime @default(now())
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  clientName  String
+  telegram    String
+  videoType   String
+  duration    String
+  description String
+  urgency     String
+  status      String   @default("new")
+  createdAt   DateTime @default(now())
+}
