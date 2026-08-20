@@ -11,13 +11,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        blue: {
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#0284c7"
+        },
         timax: {
           black: "#0A0A0A",
           ink: "#000000",
           panel: "#1A1A1A",
           panelSoft: "#222222",
           blue: "#3B82F6",
-          blueSoft: "#60A5FA",
+          blueSoft: "#93C5FD",
           gray: "#9CA3AF",
           gold: "#FFD700",
           orange: "#FFA500"
@@ -27,9 +34,9 @@ const config: Config = {
         days: ["var(--font-days)", "Arial", "sans-serif"]
       },
       boxShadow: {
-        blue: "0 12px 28px rgba(29, 161, 242, 0.18), 0 0 18px rgba(59, 130, 246, 0.14)",
-        gold: "0 12px 30px rgba(255, 215, 0, 0.18), 0 0 18px rgba(255, 215, 0, 0.22)",
-        logo: "0 8px 18px rgba(29, 161, 242, 0.16)"
+        blue: "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)",
+        gold: "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)",
+        logo: "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)"
       },
       backgroundImage: {
         "pixel-grid":
@@ -42,15 +49,15 @@ const config: Config = {
       addUtilities({
         ".pixel-border": {
           boxShadow:
-            "0 0 0 1px rgba(255,255,255,0.08), 0 12px 28px rgba(15,23,42,0.07), 0 0 16px rgba(59,130,246,0.1)"
+            "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)"
         },
         ".pixel-border-blue": {
           boxShadow:
-            "0 0 0 1px rgba(96,165,250,0.42), 0 14px 32px rgba(59,130,246,0.16), 0 0 18px rgba(96,165,250,0.18)"
+            "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)"
         },
         ".pixel-border-gold": {
           boxShadow:
-            "0 0 0 1px rgba(255,215,0,0.48), 0 14px 32px rgba(255,165,0,0.12), 0 0 18px rgba(255,215,0,0.18)"
+            "0 4px 6px -1px rgba(59,130,246,0.1), 0 2px 4px -1px rgba(59,130,246,0.06), 0 0 20px rgba(59,130,246,0.15)"
         }
       });
     })

@@ -2,10 +2,12 @@
 
 import { CheckCircle2, Clock, Send, X } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import { useClickSound, useReadySound } from "@/hooks/useSound";
 
 type ExpressOrderFormProps = {
   open: boolean;
   onClose: () => void;
+  defaultVideoType?: string;
 };
 
 type FormState = {
@@ -41,11 +43,16 @@ const requiredLabels: Record<keyof FormState, string> = {
   consent: "согласие"
 };
 
-export function ExpressOrderForm({ open, onClose }: ExpressOrderFormProps) {
-  const [form, setForm] = useState<FormState>(initialForm);
+export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrderFormProps) {
+  const [form, setForm] = useState<FormState>(() => ({
+    ...initialForm,
+    videoType: defaultVideoType ?? ""
+  }));
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const playClick = useClickSound();
+  const playReady = useReadySound();
 
   const remainingFields = useMemo(() => {
     return (Object.keys(requiredLabels) as Array<keyof FormState>).filter((key) => {
@@ -56,6 +63,7 @@ export function ExpressOrderForm({ open, onClose }: ExpressOrderFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    playClick();
     setError("");
 
     if (remainingFields.length) return;
@@ -74,6 +82,7 @@ export function ExpressOrderForm({ open, onClose }: ExpressOrderFormProps) {
     }
 
     setSuccess(true);
+    playReady();
     setForm(initialForm);
   }
 

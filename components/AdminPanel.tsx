@@ -9,6 +9,8 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Sparkles,
+  Layers3,
   Trash2,
   UsersRound
 } from "lucide-react";
@@ -16,9 +18,9 @@ import type { LucideIcon } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TimaxLogo } from "@/components/TimaxLogo";
-import type { EditorDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
+import type { CustomSectionDTO, EditorDTO, HeroBannerDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
 
-type TabId = "editors" | "portfolio" | "services" | "reviews" | "orders";
+type TabId = "editors" | "portfolio" | "services" | "reviews" | "orders" | "banner" | "sections";
 
 type TabItem = {
   id: TabId;
@@ -31,6 +33,8 @@ type AdminData = {
   portfolio: PortfolioItemDTO[];
   services: ServiceDTO[];
   reviews: ReviewDTO[];
+  banner: HeroBannerDTO | null;
+  sections: CustomSectionDTO[];
   orders: OrderDTO[];
 };
 
@@ -39,6 +43,8 @@ const tabs: TabItem[] = [
   { id: "portfolio", label: "Портфолио", icon: Film },
   { id: "services", label: "Услуги", icon: BriefcaseBusiness },
   { id: "reviews", label: "Отзывы", icon: MessageSquareQuote },
+  { id: "banner", label: "Лента", icon: Sparkles },
+  { id: "sections", label: "Секции", icon: Layers3 },
   { id: "orders", label: "Заявки", icon: ClipboardList }
 ];
 
@@ -47,6 +53,8 @@ const emptyData: AdminData = {
   portfolio: [],
   services: [],
   reviews: [],
+  banner: null,
+  sections: [],
   orders: []
 };
 
@@ -82,6 +90,16 @@ const emptyReviewForm = {
   rating: "5"
 };
 
+const emptyBannerForm = {
+  id: "",
+  title: "",
+  description: "",
+  isActive: true
+};
+
+const emptySectionForm = { id: "", title: "", description: "", order: "10", isVisible: true };
+const emptyCardForm = { id: "", sectionId: "", title: "", subtitle: "", description: "", imageUrl: "", linkUrl: "", order: "0" };
+
 const fieldClass =
   "w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-black/40 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:border-white/10 dark:bg-white/[0.08] dark:placeholder:text-white/40";
 
@@ -109,11 +127,15 @@ export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<TabId>("editors");
   const [data, setData] = useState<AdminData>(emptyData);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [editorForm, setEditorForm] = useState(emptyEditorForm);
   const [portfolioForm, setPortfolioForm] = useState(emptyPortfolioForm);
   const [serviceForm, setServiceForm] = useState(emptyServiceForm);
   const [reviewForm, setReviewForm] = useState(emptyReviewForm);
+  const [bannerForm, setBannerForm] = useState(emptyBannerForm);
+  const [sectionForm, setSectionForm] = useState(emptySectionForm);
+  const [cardForm, setCardForm] = useState(emptyCardForm);
 
   const activeTitle = useMemo(() => tabs.find((tab) => tab.id === activeTab)?.label ?? "Панель", [activeTab]);
   const defaultEditorId = data.editors[0]?.id ?? "";
@@ -127,6 +149,8 @@ export function AdminPanel() {
       fetch("/api/admin/portfolio", { cache: "no-store" }),
       fetch("/api/admin/services", { cache: "no-store" }),
       fetch("/api/admin/reviews", { cache: "no-store" }),
+      fetch("/api/admin/hero-banner", { cache: "no-store" }),
+      fetch("/api/admin/sections", { cache: "no-store" }),
       fetch("/api/admin/orders", { cache: "no-store" })
     ]);
 
@@ -141,28 +165,37 @@ export function AdminPanel() {
       return;
     }
 
-    const [editors, portfolio, services, reviews, orders] = await Promise.all(responses.map((response) => response.json()));
-    setData({ editors, portfolio, services, reviews, orders });
+    const [editors, portfolio, services, reviews, banner, sections, orders] = await Promise.all(responses.map((response) => response.json()));
+    setData({ editors, portfolio, services, reviews, banner: banner ?? null, sections, orders });
     setLoading(false);
   }, [router]);
 
   async function mutate(url: string, method: string, body?: unknown) {
     setNotice("");
-    const response = await fetch(url, {
-      method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
-      body: body ? JSON.stringify(body) : undefined
-    });
+    setSaving(true);
 
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-      setNotice(payload?.message || "Не удалось сохранить изменения.");
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+        setNotice(payload?.message || "Не удалось сохранить изменения.");
+        return false;
+      }
+
+      await loadData();
+      setNotice("Изменения сохранены.");
+      return true;
+    } catch {
+      setNotice("Не удалось соединиться с сервером.");
       return false;
+    } finally {
+      setSaving(false);
     }
-
-    await loadData();
-    setNotice("Изменения сохранены.");
-    return true;
   }
 
   useEffect(() => {
@@ -232,6 +265,50 @@ export function AdminPanel() {
       ? await mutate(`/api/admin/reviews/${reviewForm.id}`, "PUT", payload)
       : await mutate("/api/admin/reviews", "POST", payload);
     if (saved) setReviewForm(emptyReviewForm);
+  }
+
+  async function submitBanner(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const payload = {
+      title: bannerForm.title,
+      description: bannerForm.description,
+      isActive: bannerForm.isActive
+    };
+    const saved = bannerForm.id
+      ? await mutate(`/api/admin/hero-banner/${bannerForm.id}`, "PUT", payload)
+      : await mutate("/api/admin/hero-banner", "POST", payload);
+    if (saved) setBannerForm(emptyBannerForm);
+  }
+
+  async function submitSection(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const payload = {
+      title: sectionForm.title,
+      description: sectionForm.description,
+      order: Number(sectionForm.order),
+      isVisible: sectionForm.isVisible
+    };
+    const saved = sectionForm.id
+      ? await mutate(`/api/admin/sections/${sectionForm.id}`, "PUT", payload)
+      : await mutate("/api/admin/sections", "POST", payload);
+    if (saved) setSectionForm(emptySectionForm);
+  }
+
+  async function submitCard(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!cardForm.sectionId) return;
+    const payload = {
+      title: cardForm.title,
+      subtitle: cardForm.subtitle,
+      description: cardForm.description,
+      imageUrl: cardForm.imageUrl,
+      linkUrl: cardForm.linkUrl,
+      order: Number(cardForm.order)
+    };
+    const saved = cardForm.id
+      ? await mutate(`/api/admin/sections/${cardForm.sectionId}/cards/${cardForm.id}`, "PUT", payload)
+      : await mutate(`/api/admin/sections/${cardForm.sectionId}/cards`, "POST", payload);
+    if (saved) setCardForm({ ...emptyCardForm, sectionId: cardForm.sectionId });
   }
 
   async function deleteItem(url: string) {
@@ -343,7 +420,7 @@ export function AdminPanel() {
                       <input type="checkbox" checked={editorForm.isActive} onChange={(event) => setEditorForm((value) => ({ ...value, isActive: event.target.checked }))} className="h-4 w-4 accent-blue-500" />
                       Активен
                     </label>
-                    <SubmitRow editing={Boolean(editorForm.id)} onCancel={() => setEditorForm(emptyEditorForm)} />
+                    <SubmitRow editing={Boolean(editorForm.id)} saving={saving} onCancel={() => setEditorForm(emptyEditorForm)} />
                   </form>
 
                   <ListPanel>
@@ -354,10 +431,7 @@ export function AdminPanel() {
                             <h3 className="font-days text-xl tracking-normal">{editor.name}</h3>
                             <span
                               className="h-3 w-3 rounded-full"
-                              style={{
-                                backgroundColor: editor.accentColor,
-                                boxShadow: `0 0 16px ${editor.accentColor}`
-                              }}
+                              style={{ backgroundColor: editor.accentColor }}
                             />
                           </div>
                           <p className="mt-2 text-sm leading-6 text-black/60 dark:text-white/60">{editor.description}</p>
@@ -395,7 +469,7 @@ export function AdminPanel() {
                         ))}
                       </select>
                     </Field>
-                    <SubmitRow editing={Boolean(portfolioForm.id)} onCancel={() => setPortfolioForm({ ...emptyPortfolioForm, editorId: data.editors[0]?.id ?? "" })} />
+                    <SubmitRow editing={Boolean(portfolioForm.id)} saving={saving} onCancel={() => setPortfolioForm({ ...emptyPortfolioForm, editorId: data.editors[0]?.id ?? "" })} />
                   </form>
 
                   <ListPanel>
@@ -433,7 +507,7 @@ export function AdminPanel() {
                       <input type="checkbox" checked={serviceForm.isPopular} onChange={(event) => setServiceForm((value) => ({ ...value, isPopular: event.target.checked }))} className="h-4 w-4 accent-blue-500" />
                       Популярный
                     </label>
-                    <SubmitRow editing={Boolean(serviceForm.id)} onCancel={() => setServiceForm(emptyServiceForm)} />
+                    <SubmitRow editing={Boolean(serviceForm.id)} saving={saving} onCancel={() => setServiceForm(emptyServiceForm)} />
                   </form>
 
                   <ListPanel>
@@ -472,7 +546,7 @@ export function AdminPanel() {
                         <option value="3">3</option>
                       </select>
                     </Field>
-                    <SubmitRow editing={Boolean(reviewForm.id)} onCancel={() => setReviewForm(emptyReviewForm)} />
+                    <SubmitRow editing={Boolean(reviewForm.id)} saving={saving} onCancel={() => setReviewForm(emptyReviewForm)} />
                   </form>
 
                   <ListPanel>
@@ -489,6 +563,116 @@ export function AdminPanel() {
                         />
                       </AdminCard>
                     ))}
+                  </ListPanel>
+                </div>
+              ) : null}
+
+              {activeTab === "banner" ? (
+                <div className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
+                  <form onSubmit={submitBanner} className={panelClass}>
+                    <FormTitle icon={Sparkles} title={bannerForm.id ? "Редактировать ленту" : "Добавить ленту"} />
+                    <Field label="Заголовок">
+                      <input className={fieldClass} value={bannerForm.title} onChange={(event) => setBannerForm((value) => ({ ...value, title: event.target.value }))} placeholder="Новое видео / Новость" required />
+                    </Field>
+                    <Field label="Описание">
+                      <textarea className={`${fieldClass} min-h-24`} value={bannerForm.description} onChange={(event) => setBannerForm((value) => ({ ...value, description: event.target.value }))} placeholder="Кратко опишите событие или новость" required />
+                    </Field>
+                    <label className="mt-4 flex items-center gap-3 rounded-2xl border border-black/10 bg-black/[0.03] p-3 text-sm font-semibold dark:border-white/10 dark:bg-white/[0.06]">
+                      <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((value) => ({ ...value, isActive: event.target.checked }))} className="h-4 w-4 accent-blue-500" />
+                      Показывать на главном экране
+                    </label>
+                    <SubmitRow editing={Boolean(bannerForm.id)} saving={saving} onCancel={() => setBannerForm(emptyBannerForm)} />
+                  </form>
+
+                  <ListPanel>
+                    {data.banner ? (
+                      <AdminCard>
+                        <div>
+                          <h3 className="font-days text-xl tracking-normal">{data.banner.title}</h3>
+                          <p className="mt-2 text-sm leading-6 text-black/60 dark:text-white/60">{data.banner.description}</p>
+                          <p className="mt-2 text-xs font-bold text-blue-600 dark:text-blue-300">{data.banner.isActive ? "Активна" : "Не активна"}</p>
+                        </div>
+                        <CardActions
+                          onEdit={() => setBannerForm({ id: data.banner!.id, title: data.banner!.title, description: data.banner!.description, isActive: data.banner!.isActive })}
+                          onDelete={() => void deleteItem(`/api/admin/hero-banner/${data.banner!.id}`)}
+                        />
+                      </AdminCard>
+                    ) : (
+                      <div className={panelClass}>Ленты пока нет.</div>
+                    )}
+                  </ListPanel>
+                </div>
+              ) : null}
+
+              {activeTab === "sections" ? (
+                <div className="grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
+                  <div className="grid content-start gap-5">
+                    <form onSubmit={submitSection} className={panelClass}>
+                      <FormTitle icon={Layers3} title={sectionForm.id ? "Редактировать секцию" : "Добавить секцию"} />
+                      <Field label="Название">
+                        <input className={fieldClass} value={sectionForm.title} onChange={(event) => setSectionForm((value) => ({ ...value, title: event.target.value }))} required />
+                      </Field>
+                      <Field label="Описание">
+                        <textarea className={`${fieldClass} min-h-24`} value={sectionForm.description} onChange={(event) => setSectionForm((value) => ({ ...value, description: event.target.value }))} />
+                      </Field>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label="Порядок">
+                          <input className={fieldClass} type="number" value={sectionForm.order} onChange={(event) => setSectionForm((value) => ({ ...value, order: event.target.value }))} />
+                        </Field>
+                        <label className="mt-4 flex items-center gap-3 rounded-2xl border border-black/10 p-3 text-sm font-semibold dark:border-white/10">
+                          <input type="checkbox" checked={sectionForm.isVisible} onChange={(event) => setSectionForm((value) => ({ ...value, isVisible: event.target.checked }))} className="h-4 w-4 accent-blue-500" />
+                          Видима
+                        </label>
+                      </div>
+                      <SubmitRow editing={Boolean(sectionForm.id)} saving={saving} onCancel={() => setSectionForm(emptySectionForm)} />
+                    </form>
+
+                    <form onSubmit={submitCard} className={panelClass}>
+                      <FormTitle icon={Plus} title={cardForm.id ? "Редактировать карточку" : "Добавить карточку"} />
+                      <Field label="Секция">
+                        <select className={fieldClass} value={cardForm.sectionId} onChange={(event) => setCardForm((value) => ({ ...value, sectionId: event.target.value }))} required>
+                          <option value="">Выберите секцию</option>
+                          {data.sections.map((section) => <option key={section.id} value={section.id}>{section.title}</option>)}
+                        </select>
+                      </Field>
+                      <Field label="Заголовок"><input className={fieldClass} value={cardForm.title} onChange={(event) => setCardForm((value) => ({ ...value, title: event.target.value }))} required /></Field>
+                      <Field label="Подзаголовок"><input className={fieldClass} value={cardForm.subtitle} onChange={(event) => setCardForm((value) => ({ ...value, subtitle: event.target.value }))} /></Field>
+                      <Field label="Описание"><textarea className={`${fieldClass} min-h-24`} value={cardForm.description} onChange={(event) => setCardForm((value) => ({ ...value, description: event.target.value }))} /></Field>
+                      <Field label="URL изображения"><input className={fieldClass} type="url" value={cardForm.imageUrl} onChange={(event) => setCardForm((value) => ({ ...value, imageUrl: event.target.value }))} /></Field>
+                      <Field label="URL ссылки"><input className={fieldClass} type="url" value={cardForm.linkUrl} onChange={(event) => setCardForm((value) => ({ ...value, linkUrl: event.target.value }))} /></Field>
+                      <Field label="Порядок"><input className={fieldClass} type="number" value={cardForm.order} onChange={(event) => setCardForm((value) => ({ ...value, order: event.target.value }))} /></Field>
+                      <SubmitRow editing={Boolean(cardForm.id)} saving={saving} onCancel={() => setCardForm(emptyCardForm)} />
+                    </form>
+                  </div>
+
+                  <ListPanel>
+                    {data.sections.map((section) => (
+                      <AdminCard key={section.id}>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-days text-xl tracking-normal">{section.title}</h3>
+                            <span className="rounded-xl bg-blue-500/10 px-2 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">#{section.order} · {section.isVisible ? "Видима" : "Скрыта"}</span>
+                          </div>
+                          {section.description ? <p className="mt-2 text-sm text-black/60 dark:text-white/60">{section.description}</p> : null}
+                          <div className="mt-4 grid gap-2">
+                            {section.cards.map((card) => (
+                              <div key={card.id} className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 p-3 dark:border-white/10">
+                                <div><p className="font-semibold">{card.title}</p><p className="text-xs text-black/55 dark:text-white/55">#{card.order}{card.subtitle ? ` · ${card.subtitle}` : ""}</p></div>
+                                <div className="flex gap-2">
+                                  <button type="button" aria-label="Редактировать карточку" onClick={() => setCardForm({ id: card.id, sectionId: section.id, title: card.title, subtitle: card.subtitle ?? "", description: card.description ?? "", imageUrl: card.imageUrl ?? "", linkUrl: card.linkUrl ?? "", order: String(card.order) })} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-500/30 text-blue-500"><Pencil className="h-4 w-4" /></button>
+                                  <button type="button" aria-label="Удалить карточку" onClick={() => void deleteItem(`/api/admin/sections/${section.id}/cards/${card.id}`)} className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-500/30 text-red-500"><Trash2 className="h-4 w-4" /></button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <CardActions
+                          onEdit={() => setSectionForm({ id: section.id, title: section.title, description: section.description ?? "", order: String(section.order), isVisible: section.isVisible })}
+                          onDelete={() => void deleteItem(`/api/admin/sections/${section.id}`)}
+                        />
+                      </AdminCard>
+                    ))}
+                    {!data.sections.length ? <div className={panelClass}>Секций пока нет.</div> : null}
                   </ListPanel>
                 </div>
               ) : null}
@@ -560,19 +744,21 @@ function FormTitle({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
   );
 }
 
-function SubmitRow({ editing, onCancel }: { editing: boolean; onCancel: () => void }) {
+function SubmitRow({ editing, saving, onCancel }: { editing: boolean; saving: boolean; onCancel: () => void }) {
   return (
     <div className="mt-5 flex flex-col gap-2 sm:flex-row">
       <button
         type="submit"
-        className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-bold text-white shadow-blue transition hover:scale-[1.02]"
+        disabled={saving}
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-bold text-white shadow-blue transition hover:scale-[1.02] disabled:cursor-wait disabled:opacity-60"
       >
         <Plus className="h-5 w-5" />
-        {editing ? "Сохранить" : "Добавить"}
+        {saving ? "Сохраняем..." : editing ? "Сохранить" : "Добавить"}
       </button>
       {editing ? (
         <button
           type="button"
+          disabled={saving}
           onClick={onCancel}
           className="rounded-2xl border border-black/10 bg-black/[0.03] px-5 py-3 font-bold transition hover:scale-[1.02] dark:border-white/10 dark:bg-white/[0.08]"
         >

@@ -2,8 +2,7 @@
 
 import { SafeLogoImage } from "@/components/SafeLogoImage";
 
-const BEAR_LOGO_SOURCES = ["/images/bear-logo-160.png", "/images/bear-logo.png", "/images/bear-logo.svg"];
-const BEAR_LOGO_SRC_SET = "/images/bear-logo-160.png 160w, /images/bear-logo-420.png 420w, /images/bear-logo.png 1254w";
+const BEAR_LOGO_SOURCES = ["/images/bear-logo.webp", "/images/bear-logo.png"];
 
 type WalkingBearProps = {
   className?: string;
@@ -12,7 +11,7 @@ type WalkingBearProps = {
 export function WalkingBear({ className = "" }: WalkingBearProps) {
   return (
     <span
-      className={`header-bear pointer-events-none relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-blue-500/20 bg-black shadow-logo sm:h-12 sm:w-12 ${className}`}
+      className={`header-bear pointer-events-none relative inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-visible sm:h-11 sm:w-11 ${className}`}
       aria-hidden="true"
     >
       <SafeLogoImage
@@ -20,9 +19,11 @@ export function WalkingBear({ className = "" }: WalkingBearProps) {
         alt=""
         fetchPriority="high"
         loading="eager"
-        sizes="(max-width: 767px) 40px, 48px"
-        srcSet={BEAR_LOGO_SRC_SET}
-        className="header-bear-image h-full w-full object-cover"
+        sizes="(max-width: 767px) 36px, 44px"
+        optimized
+        width={1272}
+        height={1236}
+        className="header-bear-image relative z-10 h-full w-full object-contain"
       />
     </span>
   );

@@ -49,8 +49,37 @@ export type OrderDTO = {
   createdAt: string;
 };
 
+export type HeroBannerDTO = {
+  id: string;
+  title: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type CustomCardDTO = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  order: number;
+};
+
+export type CustomSectionDTO = {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  isVisible: boolean;
+  cards: CustomCardDTO[];
+};
+
 export type PublicDataDTO = {
   editors: EditorDTO[];
   services: ServiceDTO[];
   reviews: ReviewDTO[];
+  banner: HeroBannerDTO | null;
+  sections: CustomSectionDTO[];
 };

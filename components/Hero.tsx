@@ -3,45 +3,54 @@
 import { Play, Send } from "lucide-react";
 import { GlowingBear } from "@/components/GlowingBear";
 import { TimaxLogo } from "@/components/TimaxLogo";
+import { useClickSound } from "@/hooks/useSound";
+import type { HeroBannerDTO } from "@/lib/types";
 
 type HeroProps = {
   onOrderOpen: () => void;
+  banner?: HeroBannerDTO | null;
 };
 
-export function Hero({ onOrderOpen }: HeroProps) {
+export function Hero({ onOrderOpen, banner }: HeroProps) {
+  const playClick = useClickSound();
+
   return (
     <section
       id="hero"
-      className="relative flex min-h-[100svh] items-center overflow-hidden px-4 pb-10 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:px-6 sm:pb-12 sm:pt-24 lg:px-8"
+      className="relative flex min-h-[calc(100svh-1rem)] items-center overflow-hidden px-3 pb-4 pt-[calc(3.75rem+env(safe-area-inset-top))] sm:min-h-[100svh] sm:px-6 sm:pb-12 sm:pt-20 lg:min-h-[calc(100svh-2rem)] lg:px-8 lg:pb-4 lg:pt-14"
     >
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center justify-center text-center">
-        <div className="pointer-events-none absolute top-[57%] hidden -translate-y-1/2 opacity-40 lg:-right-32 lg:block xl:-right-36 2xl:-right-28">
-          <GlowingBear />
-        </div>
-
         <div className="relative z-10 flex w-full min-w-0 flex-col items-center">
-          <div className="mb-5 flex justify-center lg:hidden">
-            <GlowingBear mobileBadge priority />
-          </div>
+          {banner ? (
+            <div className="mb-5 inline-flex max-w-[min(92vw,42rem)] items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-center text-[0.68rem] font-semibold tracking-[0.12em] text-blue-200 uppercase shadow-blue backdrop-blur-sm sm:text-[0.72rem]">
+              <span className="mr-2 inline-block h-2 w-2 rounded-full bg-blue-400" />
+              <span>{banner.title}</span>
+            </div>
+          ) : null}
 
-          <h1 className="mx-auto max-w-[22rem] break-words font-days text-[clamp(2.15rem,9.6vw,3rem)] uppercase leading-[0.98] tracking-normal text-balance sm:max-w-3xl sm:text-[clamp(3.6rem,9vw,6.6rem)] lg:max-w-5xl lg:text-[clamp(5.25rem,8.8vw,8rem)]">
+          <h1 className="mx-auto max-w-[22rem] break-words font-days text-[clamp(2.15rem,9.6vw,3rem)] uppercase leading-[0.98] tracking-normal text-balance sm:max-w-3xl sm:text-[clamp(3.6rem,9vw,6.6rem)] lg:max-w-5xl lg:text-[clamp(4.6rem,7.5vw,6.8rem)]">
             <span className="block">ТЕБЕ НУЖЕН</span>
             <span className="block">МОНТАЖ</span>
           </h1>
 
-          <div className="mt-4 flex justify-center sm:mt-6">
+          <div className="mb-1 mt-2 flex justify-center sm:mb-5 sm:mt-5 lg:hidden">
+            <GlowingBear mobileBadge priority />
+          </div>
+
+          <div className="relative mt-1 flex justify-center sm:mt-6 lg:mt-3">
+            <span className="hero-logo-glow" aria-hidden="true" />
             <TimaxLogo hero priority />
           </div>
 
-          <p className="mx-auto mt-4 max-w-[19rem] text-sm leading-6 text-black/66 dark:text-white/68 sm:mt-6 sm:max-w-2xl sm:text-base md:text-xl md:leading-8">
-            Профессиональный видеомонтаж для YouTube, TikTok, Instagram* и др.
+          <p className="mx-auto mt-2 max-w-[18rem] text-[0.82rem] leading-5 text-black/66 dark:text-white/68 sm:mt-6 sm:max-w-2xl sm:text-base md:text-xl md:leading-8 lg:mt-3">
+            {banner?.description ?? "Профессиональный видеомонтаж для YouTube, TikTok, Instagram* и др."}
           </p>
           <p className="mx-auto mt-1 max-w-[19rem] text-[0.64rem] leading-4 text-black/45 dark:text-white/45 sm:max-w-2xl sm:text-xs">
             * - признан экстремистским контентом на территории РФ
           </p>
 
-          <div className="mt-7 grid w-full max-w-xs grid-cols-1 gap-2 sm:flex sm:max-w-none sm:justify-center sm:gap-3">
-            <HeroActions onOrderOpen={onOrderOpen} />
+          <div className="mt-4 grid w-full max-w-[21rem] grid-cols-1 gap-2 sm:mt-7 sm:flex sm:max-w-none sm:justify-center sm:gap-3 lg:mt-4">
+            <HeroActions onOrderOpen={onOrderOpen} playClick={playClick} />
           </div>
         </div>
       </div>
@@ -49,7 +58,7 @@ export function Hero({ onOrderOpen }: HeroProps) {
   );
 }
 
-function HeroActions({ onOrderOpen, compact = false }: HeroProps & { compact?: boolean }) {
+function HeroActions({ onOrderOpen, playClick, compact = false }: HeroProps & { compact?: boolean; playClick: () => void }) {
   const baseClass = compact
     ? "min-h-12 w-full min-w-0 rounded-2xl px-2 py-3 text-[0.78rem] sm:text-sm"
     : "min-h-12 w-full min-w-0 rounded-2xl px-4 py-3 text-sm sm:min-h-14 sm:w-auto sm:px-6 sm:py-4 sm:text-base lg:min-h-[4.25rem] lg:px-9 lg:py-5 lg:text-lg";
@@ -59,16 +68,22 @@ function HeroActions({ onOrderOpen, compact = false }: HeroProps & { compact?: b
     <>
       <button
         type="button"
-        onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "auto", block: "start" })}
-        className={`inline-flex items-center justify-center gap-2 bg-blue-500 font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400 ${baseClass}`}
+        onClick={() => {
+          playClick();
+          document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className={`tech-button inline-flex items-center justify-center gap-2 rounded-full font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 ${baseClass}`}
       >
         <Play className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
         <span className={labelClass}>Смотреть работы</span>
       </button>
       <button
         type="button"
-        onClick={onOrderOpen}
-        className={`inline-flex items-center justify-center gap-2 border border-black/10 bg-white/65 font-bold text-black transition hover:scale-[1.02] hover:border-blue-500/40 hover:shadow-blue dark:border-white/10 dark:bg-white/10 dark:text-white ${baseClass}`}
+        onClick={() => {
+          playClick();
+          onOrderOpen();
+        }}
+        className={`tech-button-subtle inline-flex items-center justify-center gap-2 rounded-full font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400/50 hover:bg-white/10 ${baseClass}`}
       >
         <Send className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
         <span className={labelClass}>Экспресс заказ</span>

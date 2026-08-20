@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
         <TimaxLogo footer />
 
-        <div className="liquid-glass mt-9 w-full max-w-2xl rounded-3xl border border-blue-500/25 bg-white/55 p-6 shadow-[0_24px_70px_rgba(29,161,242,0.18)] backdrop-blur-xl dark:bg-white/[0.07] sm:p-8">
+        <div className="liquid-glass mt-9 w-full max-w-2xl rounded-3xl border border-blue-500/25 bg-white/55 p-6 shadow-blue backdrop-blur-xl dark:bg-white/[0.07] sm:p-8">
           <p className="font-days text-3xl tracking-normal sm:text-4xl">Наш телеграм канал</p>
           <p className="mx-auto mt-4 max-w-xl text-lg font-semibold leading-8 text-black/85 dark:text-white/90">
             Подпишись на наш телеграм канал, чтобы всегда быть в курсе всех новостей!

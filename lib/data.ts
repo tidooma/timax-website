@@ -1,10 +1,26 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { EditorDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
+import type { CustomSectionDTO, EditorDTO, HeroBannerDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
 
 const dateToString = (value: Date) => value.toISOString();
 
+async function getActiveBanner() {
+  try {
+    return await prisma.heroBanner.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" }
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 export async function getPublicData() {
-  const [editors, services, reviews] = await Promise.all([
+  const [editors, services, reviews, banner, sections] = await Promise.all([
     prisma.editor.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "asc" },
@@ -15,7 +31,13 @@ export async function getPublicData() {
       }
     }),
     prisma.service.findMany({ orderBy: [{ isPopular: "desc" }, { createdAt: "asc" }] }),
-    prisma.review.findMany({ orderBy: { createdAt: "desc" } })
+    prisma.review.findMany({ orderBy: { createdAt: "desc" } }),
+    getActiveBanner(),
+    prisma.customSection.findMany({
+      where: { isVisible: true },
+      orderBy: { order: "asc" },
+      include: { cards: { orderBy: { order: "asc" } } }
+    })
   ]);
 
   return {
@@ -52,6 +74,31 @@ export async function getPublicData() {
       text: review.text,
       rating: review.rating,
       createdAt: dateToString(review.createdAt)
+    })),
+    banner: banner
+      ? ({
+          id: banner.id,
+          title: banner.title,
+          description: banner.description,
+          isActive: banner.isActive,
+          createdAt: dateToString(banner.createdAt)
+        } satisfies HeroBannerDTO)
+      : null,
+    sections: sections.map<CustomSectionDTO>((section) => ({
+      id: section.id,
+      title: section.title,
+      description: section.description,
+      order: section.order,
+      isVisible: section.isVisible,
+      cards: section.cards.map((card) => ({
+        id: card.id,
+        title: card.title,
+        subtitle: card.subtitle,
+        description: card.description,
+        imageUrl: card.imageUrl,
+        linkUrl: card.linkUrl,
+        order: card.order
+      }))
     }))
   };
 }

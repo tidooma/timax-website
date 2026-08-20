@@ -1,9 +1,10 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, Film, Play, SlidersHorizontal } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Film, Play, SlidersHorizontal } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { SafeLogoImage } from "@/components/SafeLogoImage";
+import { useClickSound } from "@/hooks/useSound";
 import type { EditorDTO } from "@/lib/types";
 
 type PortfolioProps = {
@@ -78,6 +79,7 @@ function interleaveByEditor(items: PortfolioCardItem[], editorIds: string[]) {
 }
 
 export function Portfolio({ editors }: PortfolioProps) {
+  const playClick = useClickSound();
   const [priorityEditorId, setPriorityEditorId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryTab>("Все");
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -117,18 +119,15 @@ export function Portfolio({ editors }: PortfolioProps) {
     return [...priorityItems, ...restItems];
   }, [allItems, editorIds, priorityEditorId, selectedCategory]);
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
   useEffect(() => {
     emblaApi?.reInit();
     emblaApi?.scrollTo(0);
   }, [emblaApi, filteredItems.length, priorityEditorId, selectedCategory]);
 
   return (
-    <section id="portfolio" className="section-surface relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
+    <section id="portfolio" className="section-surface relative scroll-mt-24 px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="mb-5">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-2xl border border-blue-500/25 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-600 dark:text-blue-300">
               <Film className="h-4 w-4" />
@@ -136,39 +135,24 @@ export function Portfolio({ editors }: PortfolioProps) {
             </div>
             <h2 className="font-days text-4xl tracking-normal md:text-6xl">Наши работы</h2>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              aria-label="Назад"
-              onClick={scrollPrev}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Вперёд"
-              onClick={scrollNext}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
         </div>
 
         {editors.length ? (
-          <div className="space-y-8">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="scrollbar-none flex gap-2 overflow-x-auto pb-2">
+          <div className="space-y-5 sm:space-y-8">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+              <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
                 {categoryTabs.map((category) => (
                   <button
                     key={category}
                     type="button"
-                    onClick={() => setSelectedCategory(category)}
-                    className={`shrink-0 rounded-2xl border px-5 py-3 text-sm font-bold transition hover:scale-[1.02] ${
+                    onClick={() => {
+                      playClick();
+                      setSelectedCategory(category);
+                    }}
+                    className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                       category === selectedCategory
-                        ? "border-blue-500 bg-blue-500 text-white shadow-blue"
-                        : "border-black/10 bg-black/5 text-black/70 hover:border-blue-500/40 dark:border-white/10 dark:bg-white/[0.08] dark:text-white/70"
+                        ? "border-blue-500/40 bg-blue-500/12 text-white shadow-blue"
+                        : "border-white/8 bg-white/[0.02] text-slate-300 hover:border-blue-400/30 hover:text-white"
                     }`}
                   >
                     {category}
@@ -194,21 +178,21 @@ export function Portfolio({ editors }: PortfolioProps) {
               </label>
             </div>
 
-            <div className="overflow-hidden" ref={emblaRef}>
+            <div className="overflow-hidden py-1" ref={emblaRef}>
               <div className="-ml-4 flex touch-pan-y">
                 {filteredItems.map((item) => (
                   <article
                     key={item.id}
-                    className="min-w-0 shrink-0 grow-0 basis-[88%] pl-4 sm:basis-[58%] lg:basis-[38%] xl:basis-[31%]"
+                    className="min-w-0 shrink-0 grow-0 basis-[86%] pl-4 sm:basis-[58%] lg:basis-[38%] xl:basis-[31%]"
                   >
-                    <div className="pixel-border animated-card liquid-glass h-full overflow-hidden rounded-3xl border border-black/10 bg-black/[0.035] p-3 transition hover:shadow-blue dark:border-white/10 dark:bg-white/[0.045]">
+                    <div className="tech-panel animated-card liquid-glass flex h-full flex-col overflow-hidden rounded-[1.7rem] p-2.5 transition-[border-color,background-color,box-shadow] duration-300 ease-out hover:border-blue-500/40 hover:shadow-blue dark:bg-white/[0.045] sm:p-3">
                       <PortfolioVideo youtubeId={item.youtubeId} title={item.title} />
-                      <div className="p-3">
+                      <div className="flex flex-1 flex-col p-2 sm:p-3">
                         <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">
                           <Play className="h-3.5 w-3.5" />
                           {resolveCategoryTab(item.category)}
                         </div>
-                        <h3 className="min-h-14 text-lg font-bold leading-7">{item.title}</h3>
+                        <h3 className="min-h-12 flex-1 text-sm font-bold leading-6 sm:min-h-14 sm:text-lg sm:leading-7">{item.title}</h3>
                         <EditorBadge name={item.editorName} accentColor={item.editorAccentColor} />
                       </div>
                     </div>
@@ -235,11 +219,12 @@ export function Portfolio({ editors }: PortfolioProps) {
 
 function PortfolioVideo({ youtubeId, title }: { youtubeId: string; title: string }) {
   const [loaded, setLoaded] = useState(false);
+  const playClick = useClickSound();
   const safeYoutubeId = encodeURIComponent(youtubeId.trim());
   const thumbnail = `https://i.ytimg.com/vi/${safeYoutubeId}/hqdefault.jpg`;
 
   return (
-    <div className="aspect-video overflow-hidden rounded-2xl bg-black">
+    <div className="aspect-video max-h-[300px] overflow-hidden rounded-2xl bg-black sm:max-h-[500px]">
       {loaded ? (
         <iframe
           className="h-full w-full"
@@ -253,7 +238,10 @@ function PortfolioVideo({ youtubeId, title }: { youtubeId: string; title: string
         <button
           type="button"
           aria-label={`Воспроизвести ${title}`}
-          onClick={() => setLoaded(true)}
+          onClick={() => {
+            playClick();
+            setLoaded(true);
+          }}
           className="group relative flex h-full w-full items-center justify-center overflow-hidden"
         >
           <SafeLogoImage sources={[thumbnail]} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -271,13 +259,10 @@ function EditorBadge({ name, accentColor }: { name: string; accentColor?: string
   const accent = sanitizeAccentColor(accentColor);
 
   return (
-    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-3 py-2 text-xs font-bold text-black/65 dark:border-white/10 dark:bg-white/[0.07] dark:text-white/70">
+    <div className="mt-auto self-start inline-flex w-fit items-center justify-center gap-1.5 rounded-full border border-black/10 bg-white/60 px-2.5 py-1.5 text-[0.68rem] font-bold leading-none text-black/65 dark:border-white/10 dark:bg-white/[0.07] dark:text-white/70">
       <span
         className="flex h-5 w-5 items-center justify-center rounded-full"
-        style={{
-          backgroundColor: `${accent}22`,
-          boxShadow: `0 0 18px ${accent}`
-        }}
+        style={{ backgroundColor: `${accent}22` }}
       >
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent }} />
       </span>

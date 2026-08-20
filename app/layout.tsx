@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className={`${daysOne.variable} dark`} suppressHydrationWarning>
-      <body className="bg-timax-black text-white antialiased">{children}</body>
+      <body className="bg-[#050507] text-white antialiased">{children}</body>
     </html>
   );
 }

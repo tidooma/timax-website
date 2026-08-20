@@ -1,9 +1,10 @@
 "use client";
 
 import { Menu, Send, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TimaxLogo } from "@/components/TimaxLogo";
 import { WalkingBear } from "@/components/WalkingBear";
+import { useClickSound } from "@/hooks/useSound";
 
 const navItems = [
   { label: "Портфолио", id: "portfolio" },
@@ -17,19 +18,83 @@ type NavbarProps = {
 };
 
 function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "auto", block: "start" });
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export function Navbar({ onOrderOpen }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("portfolio");
+  const playClick = useClickSound();
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const ignoreClickRef = useRef(false);
+
+  useEffect(() => {
+    const sections = navItems.map((item) => document.getElementById(item.id)).filter(Boolean) as HTMLElement[];
+
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visibleEntry) {
+          setActiveSection(visibleEntry.target.id);
+        }
+      },
+      { rootMargin: "-20% 0px -55% 0px", threshold: [0.2, 0.4, 0.6] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, []);
 
   function handleNav(id: string) {
     setMobileOpen(false);
+    playClick();
     scrollToSection(id);
   }
 
+  function handleMouseDown(event: React.MouseEvent<HTMLButtonElement>) {
+    dragStartRef.current = { x: event.clientX, y: event.clientY };
+    ignoreClickRef.current = false;
+  }
+
+  function handleMouseMove(event: React.MouseEvent<HTMLButtonElement>) {
+    if (!dragStartRef.current) return;
+
+    const deltaX = Math.abs(event.clientX - dragStartRef.current.x);
+    const deltaY = Math.abs(event.clientY - dragStartRef.current.y);
+
+    if (Math.max(deltaX, deltaY) > 5) {
+      ignoreClickRef.current = true;
+    }
+  }
+
+  function handleMouseUp(event: React.MouseEvent<HTMLButtonElement>) {
+    if (ignoreClickRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    dragStartRef.current = null;
+  }
+
+  function handleNavClick(id: string, event: React.MouseEvent<HTMLButtonElement>) {
+    if (ignoreClickRef.current) {
+      ignoreClickRef.current = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    handleNav(id);
+  }
+
   return (
-    <header className="site-header fixed inset-x-0 top-0 z-[80] w-full border-b border-blue-500/25 bg-black/[0.9] backdrop-blur-md sm:backdrop-blur-xl">
+    <header className="site-header fixed inset-x-0 top-0 z-[80] w-full border-b border-blue-500/25 bg-[#070a10]/70 backdrop-blur-md sm:backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:min-h-[4.75rem] sm:px-6 sm:py-3 lg:px-8">
         <button
           type="button"
@@ -41,23 +106,46 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
           <TimaxLogo compact />
         </button>
 
-        <nav className="hidden items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 lg:flex">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleNav(item.id)}
-              className="rounded-xl bg-black/25 px-4 py-2 transition-colors hover:text-blue-400"
-            >
-              {item.label}
-            </button>
-          ))}
+        <nav className="hidden items-center gap-8 text-sm font-semibold lg:flex" aria-label="Главное меню">
+          {navItems.map((item) => {
+            const isActive = activeSection === item.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={() => {
+                  dragStartRef.current = null;
+                  ignoreClickRef.current = false;
+                }}
+                onClick={(event) => handleNavClick(item.id, event)}
+                className={`group relative cursor-pointer overflow-hidden pb-1 text-[0.8125rem] font-medium tracking-[0.02em] uppercase transition-colors duration-200 ${
+                  isActive ? "text-white" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <span className="relative inline-flex items-center">
+                  {item.label}
+                  <span
+                    className={`pointer-events-none absolute -bottom-1 left-0 h-px w-full transition-all duration-200 ${
+                      isActive ? "bg-blue-500" : "bg-blue-500 opacity-0 group-hover:opacity-100"
+                    }`}
+                  />
+                </span>
+              </button>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
           <button
             type="button"
-            onClick={onOrderOpen}
+            onClick={() => {
+              playClick();
+              onOrderOpen();
+            }}
             className="inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-500 px-5 text-sm font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400"
           >
             <Send className="h-4 w-4" />
@@ -112,6 +200,7 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
               type="button"
               onClick={() => {
                 setMobileOpen(false);
+                playClick();
                 onOrderOpen();
               }}
               className="mt-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-4 font-bold text-white shadow-blue"
