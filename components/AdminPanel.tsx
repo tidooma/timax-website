@@ -12,11 +12,14 @@ import {
   Sparkles,
   Layers3,
   Trash2,
-  UsersRound
+  UsersRound,
+  X
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useReadySound } from "@/hooks/useSound";
 import { TimaxLogo } from "@/components/TimaxLogo";
 import type { CustomSectionDTO, EditorDTO, HeroBannerDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
 
@@ -112,6 +115,14 @@ const statusLabels: Record<string, string> = {
   done: "Готово"
 };
 
+const statusClasses: Record<string, string> = {
+  new: "border-sky-400/40 bg-sky-400/10 text-sky-300",
+  "in-progress": "border-orange-400/40 bg-orange-400/10 text-orange-300",
+  done: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
+};
+
+const notificationMuteReasons = ["Конец смены", "Ночь", "Другие обстоятельства"] as const;
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
@@ -136,6 +147,12 @@ export function AdminPanel() {
   const [bannerForm, setBannerForm] = useState(emptyBannerForm);
   const [sectionForm, setSectionForm] = useState(emptySectionForm);
   const [cardForm, setCardForm] = useState(emptyCardForm);
+  const [newOrderNotification, setNewOrderNotification] = useState<OrderDTO | null>(null);
+  const [notificationsMuted, setNotificationsMuted] = useState(false);
+  const [notificationMuteReason, setNotificationMuteReason] = useState("");
+  const [selectedMuteReason, setSelectedMuteReason] = useState("");
+  const knownOrderIds = useRef<Set<string> | null>(null);
+  const playReady = useReadySound();
 
   const activeTitle = useMemo(() => tabs.find((tab) => tab.id === activeTab)?.label ?? "Панель", [activeTab]);
   const defaultEditorId = data.editors[0]?.id ?? "";
@@ -167,6 +184,9 @@ export function AdminPanel() {
 
     const [editors, portfolio, services, reviews, banner, sections, orders] = await Promise.all(responses.map((response) => response.json()));
     setData({ editors, portfolio, services, reviews, banner: banner ?? null, sections, orders });
+    if (knownOrderIds.current === null) {
+      knownOrderIds.current = new Set(orders.map((order: OrderDTO) => order.id));
+    }
     setLoading(false);
   }, [router]);
 
@@ -206,8 +226,70 @@ export function AdminPanel() {
     return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
+  useEffect(() => {
+    const savedMute = window.localStorage.getItem("timax-admin-order-notifications-muted");
+    const savedReason = window.localStorage.getItem("timax-admin-order-notifications-reason");
+    if (savedMute === "true") setNotificationsMuted(true);
+    if (savedReason) setNotificationMuteReason(savedReason);
+  }, []);
+
+  function muteOrderNotifications() {
+    if (!selectedMuteReason) return;
+
+    window.localStorage.setItem("timax-admin-order-notifications-muted", "true");
+    window.localStorage.setItem("timax-admin-order-notifications-reason", selectedMuteReason);
+    setNotificationsMuted(true);
+    setNotificationMuteReason(selectedMuteReason);
+    setSelectedMuteReason("");
+    setNewOrderNotification(null);
+  }
+
+  function enableOrderNotifications() {
+    window.localStorage.removeItem("timax-admin-order-notifications-muted");
+    window.localStorage.removeItem("timax-admin-order-notifications-reason");
+    setNotificationsMuted(false);
+    setNotificationMuteReason("");
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkForNewOrders = async () => {
+      const response = await fetch("/api/admin/orders", { cache: "no-store" });
+      if (!response.ok || cancelled) return;
+
+      const orders = (await response.json()) as OrderDTO[];
+      const previousOrderIds = knownOrderIds.current;
+
+      setData((value) => ({ ...value, orders }));
+      knownOrderIds.current = new Set(orders.map((order) => order.id));
+
+      if (previousOrderIds === null) return;
+
+      const newOrder = orders.find((order) => !previousOrderIds.has(order.id));
+      if (newOrder && !notificationsMuted) {
+        setNewOrderNotification(newOrder);
+        playReady();
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void checkForNewOrders();
+    }, 10000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [notificationsMuted, playReady]);
+
   async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
+    const response = await fetch("/api/admin/logout", { method: "POST" });
+    if (response.ok) {
+      router.replace("/");
+      return;
+    }
+
     router.refresh();
   }
 
@@ -316,6 +398,11 @@ export function AdminPanel() {
     await mutate(url, "DELETE");
   }
 
+  async function deleteAllOrders() {
+    if (!data.orders.length || !window.confirm("Удалить все заявки? Это действие нельзя отменить.")) return;
+    await mutate("/api/admin/orders", "DELETE");
+  }
+
   useEffect(() => {
     if (portfolioForm.editorId || !defaultEditorId) return;
 
@@ -384,6 +471,27 @@ export function AdminPanel() {
           {notice ? (
             <div className="mb-5 rounded-2xl border border-blue-500/25 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-700 dark:text-blue-200">
               {notice}
+            </div>
+          ) : null}
+
+          {newOrderNotification ? (
+            <div role="status" aria-live="polite" className="fixed right-4 top-4 z-[120] w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-blue-400/45 bg-[#090d15]/95 p-4 text-white shadow-[0_0_30px_rgba(59,130,246,0.3)] backdrop-blur-xl">
+              <div className="flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-blue-200">Новая заявка</p>
+                  <p className="mt-1 truncate font-days text-lg tracking-normal">{newOrderNotification.clientName}</p>
+                  <p className="mt-1 text-sm text-white/65">{newOrderNotification.videoType}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Закрыть уведомление"
+                  onClick={() => setNewOrderNotification(null)}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/70 transition hover:border-blue-400/50 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mt-3 text-xs font-semibold text-white/45">Откройте раздел «Заявки», чтобы посмотреть детали.</p>
             </div>
           ) : null}
 
@@ -678,43 +786,93 @@ export function AdminPanel() {
               ) : null}
 
               {activeTab === "orders" ? (
-                <ListPanel>
-                  {data.orders.map((order) => (
-                    <AdminCard key={order.id}>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-days text-xl tracking-normal">{order.clientName}</h3>
-                          <span className="rounded-xl bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">
-                            {statusLabels[order.status] ?? order.status}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm text-black/60 dark:text-white/60">{order.telegram} · {order.videoType} · {order.duration}</p>
-                        <p className="mt-2 text-sm leading-6 text-black/70 dark:text-white/70">{order.description}</p>
-                        <p className="mt-2 text-xs font-semibold text-black/50 dark:text-white/50">{order.urgency} · {formatDate(order.createdAt)}</p>
-                      </div>
-                      <div className="flex shrink-0 flex-col gap-2">
-                        <select
-                          className={`${fieldClass} min-w-36`}
-                          value={order.status}
-                          onChange={(event) => void mutate(`/api/admin/orders/${order.id}`, "PUT", { status: event.target.value })}
-                        >
-                          <option value="new">Новая</option>
-                          <option value="in-progress">В работе</option>
-                          <option value="done">Готово</option>
-                        </select>
+                <div className="grid content-start gap-3">
+                  <div className="flex flex-col gap-3 rounded-3xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-white/[0.045] sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-black/60 dark:text-white/60">Всего заявок: {data.orders.length}</p>
+                      <p className="mt-1 text-xs text-black/45 dark:text-white/45">
+                        {notificationsMuted ? `Звуковые уведомления отключены: ${notificationMuteReason}.` : "Звуковые уведомления включены."}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      {notificationsMuted ? (
                         <button
                           type="button"
-                          onClick={() => void deleteItem(`/api/admin/orders/${order.id}`)}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-500 transition hover:scale-[1.02]"
+                          onClick={enableOrderNotifications}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-500 transition hover:scale-[1.02]"
                         >
-                          <Trash2 className="h-4 w-4" />
-                          Удалить
+                          Включить уведомления
                         </button>
-                      </div>
-                    </AdminCard>
-                  ))}
-                  {!data.orders.length ? <div className={panelClass}>Заявок пока нет.</div> : null}
-                </ListPanel>
+                      ) : (
+                        <>
+                          <select
+                            value={selectedMuteReason}
+                            onChange={(event) => setSelectedMuteReason(event.target.value)}
+                            aria-label="Причина отключения уведомлений"
+                            className={`${fieldClass} min-w-48`}
+                          >
+                            <option value="">Причина отключения</option>
+                            {notificationMuteReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+                          </select>
+                          <button
+                            type="button"
+                            disabled={!selectedMuteReason}
+                            onClick={muteOrderNotifications}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm font-bold text-orange-500 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Отключить уведомления
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        disabled={!data.orders.length || saving}
+                        onClick={() => void deleteAllOrders()}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-500 transition hover:scale-[1.02] hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Очистить все заявки
+                      </button>
+                    </div>
+                  </div>
+                  <ListPanel>
+                    {data.orders.map((order) => (
+                      <AdminCard key={order.id}>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-days text-xl tracking-normal">{order.clientName}</h3>
+                            <span className={`rounded-xl border px-3 py-1 text-xs font-bold ${statusClasses[order.status] ?? "border-white/15 bg-white/10 text-white/70"}`}>
+                              {statusLabels[order.status] ?? order.status}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-black/60 dark:text-white/60">{order.telegram} · {order.videoType} · {order.duration}</p>
+                          <p className="mt-2 text-sm leading-6 text-black/70 dark:text-white/70">{order.description}</p>
+                          <p className="mt-2 text-xs font-semibold text-black/50 dark:text-white/50">{order.urgency} · {formatDate(order.createdAt)}</p>
+                        </div>
+                        <div className="flex shrink-0 flex-col gap-2">
+                          <select
+                            className={`${fieldClass} min-w-36`}
+                            value={order.status}
+                            onChange={(event) => void mutate(`/api/admin/orders/${order.id}`, "PUT", { status: event.target.value })}
+                          >
+                            <option value="new">Новая</option>
+                            <option value="in-progress">В работе</option>
+                            <option value="done">Готово</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => void deleteItem(`/api/admin/orders/${order.id}`)}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-500 transition hover:scale-[1.02]"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Удалить
+                          </button>
+                        </div>
+                      </AdminCard>
+                    ))}
+                    {!data.orders.length ? <div className={panelClass}>Заявок пока нет.</div> : null}
+                  </ListPanel>
+                </div>
               ) : null}
             </>
           )}

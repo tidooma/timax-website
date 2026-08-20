@@ -13,3 +13,10 @@ export async function GET(request: NextRequest) {
   const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json(orders.map(serializeOrder));
 }
+
+export async function DELETE(request: NextRequest) {
+  if (!isAdminRequest(request)) return unauthorized();
+
+  await prisma.order.deleteMany();
+  return NextResponse.json({ ok: true });
+}

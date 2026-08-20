@@ -5,6 +5,13 @@ import { serializeOrder } from "@/lib/data";
 import { sendOrderTelegramNotification } from "@/lib/telegram";
 
 const requiredFields = ["clientName", "telegram", "videoType", "duration", "description", "urgency"] as const;
+const orderRateLimitMs = 60 * 1000;
+const recentSubmissions = new Map<string, number>();
+
+function getClientKey(request: NextRequest) {
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwardedFor || request.headers.get("x-real-ip") || "unknown-client";
+}
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as Record<string, string | boolean> | null;
@@ -18,6 +25,17 @@ export async function POST(request: NextRequest) {
   if (missing.length || body.consent !== true) {
     return NextResponse.json({ message: "Заполните обязательные поля." }, { status: 400 });
   }
+
+  const clientKey = getClientKey(request);
+  const lastSubmission = recentSubmissions.get(clientKey);
+  if (lastSubmission && Date.now() - lastSubmission < orderRateLimitMs) {
+    return NextResponse.json(
+      { message: "Подождите несколько минут и повторите попытку — вы уже отправляли заявку!" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
+  recentSubmissions.set(clientKey, Date.now());
 
   const order = await prisma.order.create({
     data: {

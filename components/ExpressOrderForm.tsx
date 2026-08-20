@@ -77,7 +77,8 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
     setLoading(false);
 
     if (!response.ok) {
-      setError("Не получилось отправить заявку. Проверьте поля и попробуйте ещё раз.");
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message || "Не получилось отправить заявку. Проверьте поля и попробуйте ещё раз.");
       return;
     }
 
