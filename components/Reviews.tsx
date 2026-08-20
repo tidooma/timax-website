@@ -1,8 +1,7 @@
 "use client";
 
-import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
-import { useCallback, useEffect, useMemo } from "react";
+import { Quote, Star } from "lucide-react";
+import { useMemo } from "react";
 import type { ReviewDTO } from "@/lib/types";
 
 type ReviewsProps = {
@@ -10,25 +9,12 @@ type ReviewsProps = {
 };
 
 export function Reviews({ reviews }: ReviewsProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
-    dragFree: false,
-    loop: reviews.length > 1
-  });
-
   const loopedReviews = useMemo(() => {
     if (!reviews.length) return [];
 
     const targetLength = Math.max(reviews.length * 2, 8);
     return Array.from({ length: targetLength }, (_, index) => reviews[index % reviews.length]);
   }, [reviews]);
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
-  useEffect(() => {
-    emblaApi?.reInit();
-  }, [emblaApi, loopedReviews.length]);
 
   return (
     <section id="reviews" className="section-surface relative scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8">
@@ -41,35 +27,16 @@ export function Reviews({ reviews }: ReviewsProps) {
             </div>
             <h2 className="font-days text-3xl tracking-normal sm:text-4xl md:text-5xl">Отзывы клиентов</h2>
           </div>
-          {reviews.length > 1 ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-label="Назад"
-                onClick={scrollPrev}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Вперёд"
-                onClick={scrollNext}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          ) : null}
         </div>
 
         {loopedReviews.length ? (
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="-ml-3 flex touch-pan-y">
+          /* Горизонтальная прокрутка отзывов с кастомным scrollbar */
+          <div className="overflow-x-auto pb-4">
+            <div className="flex min-w-max gap-3">
               {loopedReviews.map((review, index) => (
                 <article
                   key={`${review.id}-${index}`}
-                  className="min-w-0 shrink-0 grow-0 basis-[82%] pl-3 sm:basis-[48%] lg:basis-[31%]"
+                  className="w-[82%] sm:w-[48%] lg:w-[31%]"
                 >
                   <div className="pixel-border animated-card h-full rounded-3xl border border-black/10 bg-black/[0.035] p-4 transition hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
                     <Quote className="h-7 w-7 text-blue-500" />

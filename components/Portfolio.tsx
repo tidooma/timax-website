@@ -1,8 +1,7 @@
 "use client";
 
-import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, Film, Play, SlidersHorizontal } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Film, Play, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
 import { SafeLogoImage } from "@/components/SafeLogoImage";
 import type { EditorDTO } from "@/lib/types";
 
@@ -80,11 +79,6 @@ function interleaveByEditor(items: PortfolioCardItem[], editorIds: string[]) {
 export function Portfolio({ editors }: PortfolioProps) {
   const [priorityEditorId, setPriorityEditorId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryTab>("Все");
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
-    dragFree: true
-  });
 
   const allItems = useMemo<PortfolioCardItem[]>(
     () =>
@@ -117,14 +111,6 @@ export function Portfolio({ editors }: PortfolioProps) {
     return [...priorityItems, ...restItems];
   }, [allItems, editorIds, priorityEditorId, selectedCategory]);
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
-  useEffect(() => {
-    emblaApi?.reInit();
-    emblaApi?.scrollTo(0);
-  }, [emblaApi, filteredItems.length, priorityEditorId, selectedCategory]);
-
   return (
     <section id="portfolio" className="section-surface relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -136,30 +122,13 @@ export function Portfolio({ editors }: PortfolioProps) {
             </div>
             <h2 className="font-days text-4xl tracking-normal md:text-6xl">Наши работы</h2>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              aria-label="Назад"
-              onClick={scrollPrev}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Вперёд"
-              onClick={scrollNext}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 bg-black/5 transition hover:scale-[1.02] hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/10"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
         </div>
 
         {editors.length ? (
           <div className="space-y-8">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="scrollbar-none flex gap-2 overflow-x-auto pb-2">
+              {/* Категория табы с горизонтальным скроллом на мобильных */}
+              <div className="scrollbar-custom flex gap-2 overflow-x-auto pb-2">
                 {categoryTabs.map((category) => (
                   <button
                     key={category}
@@ -194,12 +163,13 @@ export function Portfolio({ editors }: PortfolioProps) {
               </label>
             </div>
 
-            <div className="overflow-hidden" ref={emblaRef}>
-              <div className="-ml-4 flex touch-pan-y">
+            {/* Горизонтальная прокрутка портфолио с кастомным scrollbar */}
+            <div className="overflow-x-auto pb-4">
+              <div className="flex min-w-max gap-4">
                 {filteredItems.map((item) => (
                   <article
                     key={item.id}
-                    className="min-w-0 shrink-0 grow-0 basis-[88%] pl-4 sm:basis-[58%] lg:basis-[38%] xl:basis-[31%]"
+                    className="w-[88%] sm:w-[58%] lg:w-[38%] xl:w-[31%]"
                   >
                     <div className="pixel-border animated-card liquid-glass h-full overflow-hidden rounded-3xl border border-black/10 bg-black/[0.035] p-3 transition hover:shadow-blue dark:border-white/10 dark:bg-white/[0.045]">
                       <PortfolioVideo youtubeId={item.youtubeId} title={item.title} />

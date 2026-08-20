@@ -196,6 +196,48 @@ textarea {
   display: none;
 }
 
+/* Кастомный scrollbar для горизонтальной прокрутки */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/* Для тёмной темы */
+.dark .scrollbar-custom {
+  scrollbar-color: rgba(96, 165, 250, 0.5) transparent;
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.5);
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.8);
+}
+
 @keyframes bucket-glow {
   0%,
   100% {
