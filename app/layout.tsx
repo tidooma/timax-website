@@ -10,7 +10,11 @@ const daysOne = Days_One({
 
 export const metadata: Metadata = {
   title: "Timax — видеомонтаж",
-  description: "Профессиональный видеомонтаж для YouTube, TikTok, Instagram* и др."
+  description: "Профессиональный видеомонтаж для YouTube, TikTok, Instagram* и др.",
+  icons: {
+    icon: "/apple-touch-icon.png",
+    apple: "/apple-touch-icon.png",
+  }
 };
 
 export default function RootLayout({
