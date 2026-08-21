@@ -5,13 +5,15 @@ import { GlowingBear } from "@/components/GlowingBear";
 import { TimaxLogo } from "@/components/TimaxLogo";
 import { useClickSound } from "@/hooks/useSound";
 import type { HeroBannerDTO } from "@/lib/types";
+import type { ContentSection } from "@/lib/content";
 
 type HeroProps = {
   onOrderOpen: () => void;
   banner?: HeroBannerDTO | null;
+  content?: ContentSection;
 };
 
-export function Hero({ onOrderOpen, banner }: HeroProps) {
+export function Hero({ onOrderOpen, banner, content }: HeroProps) {
   const playClick = useClickSound();
 
   return (
@@ -28,9 +30,11 @@ export function Hero({ onOrderOpen, banner }: HeroProps) {
             </div>
           ) : null}
 
-          <h1 className="mx-auto max-w-[22rem] break-words font-days text-[clamp(2.15rem,9.6vw,3rem)] uppercase leading-[0.98] tracking-normal text-balance sm:max-w-3xl sm:text-[clamp(3.6rem,9vw,6.6rem)] lg:max-w-5xl lg:text-[clamp(4.6rem,7.5vw,6.8rem)]">
-            <span className="block">ТЕБЕ НУЖЕН</span>
-            <span className="block">МОНТАЖ</span>
+          <h1 className="mx-auto w-full max-w-[22rem] break-words [overflow-wrap:anywhere] font-days text-[clamp(2.15rem,9.6vw,3rem)] uppercase leading-[0.98] tracking-normal text-balance sm:max-w-3xl sm:text-[clamp(3.6rem,9vw,6.6rem)] lg:max-w-5xl lg:text-[clamp(4.6rem,7.5vw,6.8rem)]">
+            {(() => {
+              const words = (content?.title ?? "ТЕБЕ НУЖЕН МОНТАЖ").trim().split(/\s+/);
+              return [words.slice(0, 2).join(" "), words.slice(2).join(" ")].filter(Boolean).map((line, index) => <span key={`${line}-${index}`} className="block">{line}</span>);
+            })()}
           </h1>
 
           <div className="mb-1 mt-2 flex justify-center sm:mb-5 sm:mt-5 lg:hidden">
@@ -43,10 +47,10 @@ export function Hero({ onOrderOpen, banner }: HeroProps) {
           </div>
 
           <p className="mx-auto mt-2 max-w-[18rem] text-[0.82rem] leading-5 text-black/66 dark:text-white/68 sm:mt-6 sm:max-w-2xl sm:text-base md:text-xl md:leading-8 lg:mt-3">
-            {banner?.description ?? "Профессиональный видеомонтаж для YouTube, TikTok, Instagram* и др."}
+            {banner?.description ?? content?.description ?? "Профессиональный видеомонтаж для YouTube, TikTok, Instagram и др."}
           </p>
           <p className="mx-auto mt-1 max-w-[19rem] text-[0.64rem] leading-4 text-black/45 dark:text-white/45 sm:max-w-2xl sm:text-xs">
-            * - признан экстремистским контентом на территории РФ
+            Meta (Instagram) признана экстремистской организацией на территории Российской Федерации.
           </p>
 
           <div className="mt-4 grid w-full max-w-[21rem] grid-cols-1 gap-2 sm:mt-7 sm:flex sm:max-w-none sm:justify-center sm:gap-3 lg:mt-4">

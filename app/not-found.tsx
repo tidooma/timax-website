@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 export default function NotFound() {
@@ -9,11 +10,6 @@ export default function NotFound() {
       <motion.div
         aria-hidden="true"
         className="absolute inset-0 opacity-90"
-        animate={{
-          backgroundPositionX: ["0%", "100%", "0%"],
-          backgroundPositionY: ["0%", "100%", "0%"]
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         style={{
           backgroundImage:
             "radial-gradient(circle at center, rgba(37,99,235,0.12), rgba(5,5,7,0.88) 52%, rgba(5,5,7,1) 100%)",
@@ -42,10 +38,12 @@ export default function NotFound() {
             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
           />
 
-          <img
+          <Image
             src="/images/bear-logo.png"
             alt="Timax bear"
-            className="relative h-24 w-24 object-contain drop-shadow-[0_0_34px_rgba(96,165,250,0.9)] sm:h-32 sm:w-32 md:h-40 md:w-40"
+            width={160}
+            height={160}
+            className="relative h-24 w-24 object-contain sm:h-32 sm:w-32 md:h-40 md:w-40"
           />
         </motion.div>
 

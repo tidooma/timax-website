@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { SafeLogoImage } from "@/components/SafeLogoImage";
 import type { CustomSectionDTO } from "@/lib/types";
 
@@ -9,12 +8,17 @@ type CustomSectionsFeedProps = {
 };
 
 export function CustomSectionsFeed({ sections }: CustomSectionsFeedProps) {
-  if (!sections.length) return null;
+  const visibleSections = sections.filter((section) => {
+    const normalizedTitle = section.title.toLowerCase();
+    return !normalizedTitle.includes("новост") && !normalizedTitle.includes("news") && Boolean(section.cards.length || section.description);
+  });
+
+  if (!visibleSections.length) return null;
 
   return (
     <section id="feed" className="section-surface relative scroll-mt-24 overflow-visible px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {sections.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.id} className="mb-16 last:mb-0">
             <div className="mb-8">
               <h2 className="font-days text-3xl tracking-normal sm:text-4xl md:text-5xl">{section.title}</h2>
@@ -34,14 +38,12 @@ export function CustomSectionsFeed({ sections }: CustomSectionsFeedProps) {
                 );
 
                 return (
-                  <motion.article
+                  <article
                     key={card.id}
-                    whileHover={{ boxShadow: "0 10px 25px rgba(59, 130, 246, 0.25), 0 0 35px rgba(59, 130, 246, 0.15)" }}
-                    transition={{ duration: 0.3 }}
-                    className="rounded-3xl border border-blue-500/15 bg-white/[0.045] p-4 transition-[border-color,box-shadow] duration-300 hover:border-blue-500/40"
+                    className="rounded-3xl border border-blue-500/15 bg-white/[0.045] p-4"
                   >
                     {card.linkUrl ? <a href={card.linkUrl} target="_blank" rel="noreferrer" className="block">{content}</a> : content}
-                  </motion.article>
+                  </article>
                 );
               })}
             </div>

@@ -13,7 +13,8 @@ import {
   Layers3,
   Trash2,
   UsersRound,
-  X
+  X,
+  ShieldAlert
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -21,9 +22,12 @@ import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useReadySound } from "@/hooks/useSound";
 import { TimaxLogo } from "@/components/TimaxLogo";
+import { AdminSecurity } from "@/components/AdminSecurity";
+import { AdminContent } from "@/components/AdminContent";
+import type { AdminRole } from "@/lib/auth";
 import type { CustomSectionDTO, EditorDTO, HeroBannerDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
 
-type TabId = "editors" | "portfolio" | "services" | "reviews" | "orders" | "banner" | "sections";
+type TabId = "editors" | "portfolio" | "services" | "reviews" | "orders" | "banner" | "sections" | "security" | "content";
 
 type TabItem = {
   id: TabId;
@@ -48,7 +52,9 @@ const tabs: TabItem[] = [
   { id: "reviews", label: "Отзывы", icon: MessageSquareQuote },
   { id: "banner", label: "Лента", icon: Sparkles },
   { id: "sections", label: "Секции", icon: Layers3 },
-  { id: "orders", label: "Заявки", icon: ClipboardList }
+  { id: "orders", label: "Заявки", icon: ClipboardList },
+  { id: "security", label: "Безопасность", icon: ShieldAlert },
+  { id: "content", label: "Контент сайта", icon: Layers3 }
 ];
 
 const emptyData: AdminData = {
@@ -133,9 +139,9 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function AdminPanel() {
+export function AdminPanel({ role, username, userId, permissions }: { role: AdminRole; username: string; userId: string; permissions: Record<string, boolean> }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>("editors");
+  const [activeTab, setActiveTab] = useState<TabId>(role === "MODERATOR" ? "orders" : "editors");
   const [data, setData] = useState<AdminData>(emptyData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -147,6 +153,8 @@ export function AdminPanel() {
   const [bannerForm, setBannerForm] = useState(emptyBannerForm);
   const [sectionForm, setSectionForm] = useState(emptySectionForm);
   const [cardForm, setCardForm] = useState(emptyCardForm);
+  const [securityLogs, setSecurityLogs] = useState<Array<{ id: string; username: string; action: string; entity: string | null; ipAddress: string | null; createdAt: string }>>([]);
+  const [adminUsers, setAdminUsers] = useState<Array<{ id: string; username: string; role: AdminRole; isActive: boolean; twoFactorEnabled: boolean; permissions: string }>>([]);
   const [newOrderNotification, setNewOrderNotification] = useState<OrderDTO | null>(null);
   const [notificationsMuted, setNotificationsMuted] = useState(false);
   const [notificationMuteReason, setNotificationMuteReason] = useState("");
@@ -154,7 +162,23 @@ export function AdminPanel() {
   const knownOrderIds = useRef<Set<string> | null>(null);
   const playReady = useReadySound();
 
-  const activeTitle = useMemo(() => tabs.find((tab) => tab.id === activeTab)?.label ?? "Панель", [activeTab]);
+  const visibleTabs = useMemo(() => {
+    if (role === "MODERATOR") return tabs.filter((tab) => tab.id === "orders" && permissions["orders.view"] === true);
+    if (role === "SUPER_ADMIN" && username === "tima") return tabs;
+    if (role !== "EDITOR") return [];
+    const tabPermissions: Partial<Record<TabId, string[]>> = {
+      editors: ["content.editors.edit"],
+      portfolio: ["content.portfolio.edit"],
+      services: ["content.pricing.edit"],
+      reviews: ["content.reviews.edit"],
+      sections: ["content.sections.edit"],
+      banner: ["content.hero.edit"],
+      orders: ["orders.view", "orders.manage"],
+      content: Object.keys(permissions).filter((permission) => permission.startsWith("content.") && permission.endsWith(".edit"))
+    };
+    return tabs.filter((tab) => (tabPermissions[tab.id] ?? []).some((permission) => permissions[permission] === true));
+  }, [permissions, role, username]);
+  const activeTitle = useMemo(() => visibleTabs.find((tab) => tab.id === activeTab)?.label ?? "Панель", [activeTab, visibleTabs]);
   const defaultEditorId = data.editors[0]?.id ?? "";
 
   const loadData = useCallback(async () => {
@@ -227,10 +251,32 @@ export function AdminPanel() {
   }, [loadData]);
 
   useEffect(() => {
-    const savedMute = window.localStorage.getItem("timax-admin-order-notifications-muted");
-    const savedReason = window.localStorage.getItem("timax-admin-order-notifications-reason");
-    if (savedMute === "true") setNotificationsMuted(true);
-    if (savedReason) setNotificationMuteReason(savedReason);
+    if (role !== "SUPER_ADMIN" || username !== "tima") return;
+
+    void Promise.all([
+      fetch("/api/admin/security", { cache: "no-store" }),
+      fetch("/api/admin/users", { cache: "no-store" })
+    ]).then(async ([securityResponse, usersResponse]) => {
+      if (securityResponse.ok) setSecurityLogs(await securityResponse.json());
+      if (usersResponse.ok) setAdminUsers(await usersResponse.json());
+    });
+  }, [role, username, activeTab]);
+
+  function reloadAdminUsers() {
+    void fetch("/api/admin/users", { cache: "no-store" }).then(async (response) => {
+      if (response.ok) setAdminUsers(await response.json());
+    });
+  }
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const savedMute = window.localStorage.getItem("timax-admin-order-notifications-muted");
+      const savedReason = window.localStorage.getItem("timax-admin-order-notifications-reason");
+      if (savedMute === "true") setNotificationsMuted(true);
+      if (savedReason) setNotificationMuteReason(savedReason);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   function muteOrderNotifications() {
@@ -430,7 +476,7 @@ export function AdminPanel() {
             </button>
           </div>
           <nav className="grid gap-2">
-            {tabs.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
               return (
@@ -455,13 +501,13 @@ export function AdminPanel() {
         <section className="min-w-0 flex-1">
           <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-white/[0.045] md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-blue-600 dark:text-blue-300">Управление Timax</p>
+              <p className="text-sm font-semibold text-blue-600 dark:text-blue-300">{username} · {role}</p>
               <h1 className="mt-2 font-days text-3xl tracking-normal md:text-5xl">{activeTitle}</h1>
             </div>
             <button
               type="button"
               onClick={() => void loadData()}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-600 transition hover:scale-[1.02] hover:shadow-blue dark:text-blue-300"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-600 transition hover:scale-[1.02] dark:text-blue-300"
             >
               <RefreshCw className="h-5 w-5" />
               Обновить
@@ -784,6 +830,28 @@ export function AdminPanel() {
                   </ListPanel>
                 </div>
               ) : null}
+
+              {activeTab === "security" && role === "SUPER_ADMIN" && username === "tima" ? (
+                <div className="grid gap-3">
+                  <AdminSecurity currentUserId={userId} isSuperAdmin users={adminUsers} onUsersChange={reloadAdminUsers} />
+                  <div className="px-1 pt-4">
+                    <h2 className="font-days text-3xl tracking-normal">Журнал действий</h2>
+                    <p className="mt-2 text-sm text-black/60 dark:text-white/60">Последние 100 событий входа и обращений к административному API.</p>
+                  </div>
+                  {securityLogs.map((log) => (
+                    <article key={log.id} className={panelClass}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-semibold">{log.username} · {log.action}</p>
+                        <p className="text-xs text-black/50 dark:text-white/50">{formatDate(log.createdAt)}</p>
+                      </div>
+                      <p className="mt-2 text-sm text-black/60 dark:text-white/60">{log.entity || "Система"}{log.ipAddress ? ` · ${log.ipAddress}` : ""}</p>
+                    </article>
+                  ))}
+                  {!securityLogs.length ? <div className={panelClass}>Событий пока нет.</div> : null}
+                </div>
+              ) : null}
+
+              {activeTab === "content" ? <AdminContent permissions={permissions} isSuperAdmin={role === "SUPER_ADMIN" && username === "tima"} /> : null}
 
               {activeTab === "orders" ? (
                 <div className="grid content-start gap-3">

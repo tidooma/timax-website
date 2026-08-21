@@ -57,7 +57,9 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
   const remainingFields = useMemo(() => {
     return (Object.keys(requiredLabels) as Array<keyof FormState>).filter((key) => {
       const value = form[key];
-      return typeof value === "boolean" ? !value : !value.trim();
+      if (typeof value === "boolean") return !value;
+      if (key === "telegram") return value.trim().length <= 1;
+      return !value.trim();
     });
   }, [form]);
 
@@ -149,7 +151,11 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
                     <input
                       className={inputClass}
                       value={form.telegram}
-                      onChange={(event) => setForm((value) => ({ ...value, telegram: event.target.value }))}
+                      onFocus={() => setForm((value) => ({ ...value, telegram: value.telegram || "@" }))}
+                      onChange={(event) => {
+                        const telegram = event.target.value.replace(/\s/g, "");
+                        setForm((value) => ({ ...value, telegram: telegram ? (telegram.startsWith("@") ? telegram : `@${telegram}`) : "@" }));
+                      }}
                       placeholder="@username"
                     />
                   </label>
@@ -163,7 +169,7 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
                     onChange={(event) => setForm((value) => ({ ...value, videoType: event.target.value }))}
                   >
                     <option value="">Выберите тип видео</option>
-                    <option>YouTube / TikTok / Instagram* (короткое видео до 60 сек)</option>
+                    <option>YouTube / TikTok / Instagram (короткое видео до 60 сек)</option>
                     <option>Длинное видео (YouTube, подкаст и т.д.)</option>
                     <option>Рекламный ролик</option>
                     <option>Другое</option>

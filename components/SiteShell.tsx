@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { ExpressOrderForm } from "@/components/ExpressOrderForm";
 import { Footer } from "@/components/Footer";
 import { CustomSectionsFeed } from "@/components/CustomSectionsFeed";
 import { Hero } from "@/components/Hero";
 import { Navbar } from "@/components/Navbar";
-import { Portfolio } from "@/components/Portfolio";
-import { Reviews } from "@/components/Reviews";
 import { Services } from "@/components/Services";
 import type { PublicDataDTO } from "@/lib/types";
+
+const Portfolio = dynamic(() => import("@/components/Portfolio").then((module) => module.Portfolio), { loading: () => null });
+const Reviews = dynamic(() => import("@/components/Reviews").then((module) => module.Reviews), { loading: () => null });
+const TrustSections = dynamic(() => import("@/components/TrustSections").then((module) => module.TrustSections), { loading: () => null });
 
 type SiteShellProps = {
   data: PublicDataDTO;
@@ -41,16 +44,18 @@ export function SiteShell({ data }: SiteShellProps) {
       />
       <div className="relative z-10">
         <Navbar onOrderOpen={() => openOrderForm()} />
-        <Hero onOrderOpen={() => openOrderForm()} banner={data.banner} />
+        <Hero onOrderOpen={() => openOrderForm()} banner={data.banner} content={data.content.hero} />
         <Portfolio editors={data.editors} />
         <Services
           services={data.services}
+          pricing={data.content.pricing}
           onOpenOrder={(videoType) => {
             openOrderForm(videoType);
           }}
         />
         <Reviews reviews={data.reviews} />
         <CustomSectionsFeed sections={data.sections} />
+        <TrustSections content={data.content} />
         <Footer />
         <ExpressOrderForm key={`${isOrderOpen}-${defaultVideoType}`} open={isOrderOpen} onClose={closeOrderForm} defaultVideoType={defaultVideoType} />
       </div>

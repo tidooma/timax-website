@@ -1,5 +1,26 @@
 # Деплой Timax
 
+## Обновление production
+
+На сервере `/var/www/timax-website` выполняй команды в таком порядке:
+
+```bash
+cd /var/www/timax-website
+git pull origin main
+npx prisma migrate deploy
+npx prisma db seed
+npm run build
+pm2 restart timax
+```
+
+Перед обновлением можно создать архив базы и публичных загрузок:
+
+```bash
+PROJECT_DIR=/var/www/timax-website /var/www/timax-website/scripts/backup.sh
+```
+
+Скрипт хранит последние 7 дней архивов. Для восстановления останови приложение, распакуй нужный архив поверх проекта и снова запусти миграции/build. Не запускай seed поверх production-базы с реальными заявками, если seed содержит очистку демонстрационных данных.
+
 ## Перед деплоем
 
 1. Установить зависимости:
@@ -146,12 +167,7 @@ nano .env
 
 ```env
 DATABASE_URL="file:./dev.db"
-ADMIN_PASSWORD="strong-admin-password"
-ADMIN_SECRET="long-random-secret-at-least-32-chars"
-TELEGRAM_BOT_TOKEN="telegram-bot-token"
-TELEGRAM_CHAT_ID="123456789"
-TELEGRAM_NOTIFY_TIMEOUT_MS="10000"
-TELEGRAM_TIME_ZONE="Europe/Moscow"
+SESSION_SECRET="long-random-secret-at-least-32-chars"
 ```
 
 Сгенерировать `ADMIN_SECRET` можно так:

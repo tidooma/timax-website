@@ -7,7 +7,9 @@ import { TimaxLogo } from "@/components/TimaxLogo";
 
 export function AdminLogin() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,13 +21,14 @@ export function AdminLogin() {
     const response = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ username, password, code: code || undefined })
     });
 
     setLoading(false);
 
     if (!response.ok) {
-      setError("Неверный пароль.");
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+      setError(payload?.message || "Не удалось войти.");
       return;
     }
 
@@ -47,6 +50,18 @@ export function AdminLogin() {
         </div>
         <h1 className="font-days text-3xl tracking-normal">Админ панель</h1>
         <label className="mt-6 grid gap-2 text-sm font-semibold">
+          Логин
+          <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            autoComplete="username"
+            className="rounded-2xl border border-black/10 bg-black/[0.03] px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:border-white/10 dark:bg-white/[0.08]"
+            placeholder="Введите логин"
+            required
+          />
+        </label>
+        <label className="mt-6 grid gap-2 text-sm font-semibold">
           Пароль
           <input
             type="password"
@@ -54,6 +69,20 @@ export function AdminLogin() {
             onChange={(event) => setPassword(event.target.value)}
             className="rounded-2xl border border-black/10 bg-black/[0.03] px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:border-white/10 dark:bg-white/[0.08]"
             placeholder="Введите пароль"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+        <label className="mt-4 grid gap-2 text-sm font-semibold">
+          Код 2FA <span className="font-normal text-black/45 dark:text-white/45">если включён для аккаунта</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            autoComplete="one-time-code"
+            className="rounded-2xl border border-black/10 bg-black/[0.03] px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 dark:border-white/10 dark:bg-white/[0.08]"
+            placeholder="123456"
           />
         </label>
         {error ? <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{error}</p> : null}

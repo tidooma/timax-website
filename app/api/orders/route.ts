@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { serializeOrder } from "@/lib/data";
-import { sendOrderTelegramNotification } from "@/lib/telegram";
 
 const requiredFields = ["clientName", "telegram", "videoType", "duration", "description", "urgency"] as const;
 const orderRateLimitMs = 60 * 1000;
@@ -50,10 +49,6 @@ export async function POST(request: NextRequest) {
   });
 
   revalidatePath("/admin");
-
-  await sendOrderTelegramNotification(order).catch((error) => {
-    console.error("Order was saved, but Telegram notification failed:", error);
-  });
 
   return NextResponse.json(serializeOrder(order), { status: 201 });
 }

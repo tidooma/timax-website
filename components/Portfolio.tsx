@@ -40,6 +40,15 @@ function sortByCreatedAtDesc(items: PortfolioCardItem[]) {
   return [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+function getPortfolioDescription(title: string) {
+  const normalized = title.toLowerCase();
+
+  if (normalized.includes("реклам")) return "Монтаж рекламного ролика, акцентный ритм и базовая работа со звуком.";
+  if (normalized.includes("подкаст")) return "Сборка смысловых блоков, чистка звука и аккуратные перебивки.";
+  if (normalized.includes("tiktok") || normalized.includes("short")) return "Динамичная нарезка, переходы под бит и акцентные титры.";
+  return "Нарезка исходников, базовая цветокоррекция и оформление ключевых моментов.";
+}
+
 function interleaveByEditor(items: PortfolioCardItem[], editorIds: string[]) {
   const sortedItems = sortByCreatedAtDesc(items);
   const groupedItems = new Map<string, PortfolioCardItem[]>();
@@ -185,7 +194,7 @@ export function Portfolio({ editors }: PortfolioProps) {
                     key={item.id}
                     className="min-w-0 shrink-0 grow-0 basis-[86%] pl-4 sm:basis-[58%] lg:basis-[38%] xl:basis-[31%]"
                   >
-                    <div className="tech-panel animated-card liquid-glass flex h-full flex-col overflow-hidden rounded-[1.7rem] p-2.5 transition-[border-color,background-color,box-shadow] duration-300 ease-out hover:border-blue-500/40 hover:shadow-blue dark:bg-white/[0.045] sm:p-3">
+                    <div className="tech-panel animated-card liquid-glass flex h-full flex-col overflow-hidden rounded-[1.7rem] p-2.5 dark:bg-white/[0.045] sm:p-3">
                       <PortfolioVideo youtubeId={item.youtubeId} title={item.title} />
                       <div className="flex flex-1 flex-col p-2 sm:p-3">
                         <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">
@@ -193,6 +202,7 @@ export function Portfolio({ editors }: PortfolioProps) {
                           {resolveCategoryTab(item.category)}
                         </div>
                         <h3 className="min-h-12 flex-1 text-sm font-bold leading-6 sm:min-h-14 sm:text-lg sm:leading-7">{item.title}</h3>
+                        <p className="mt-2 text-xs leading-5 text-white/55">{getPortfolioDescription(item.title)}</p>
                         <EditorBadge name={item.editorName} accentColor={item.editorAccentColor} />
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { CustomSectionDTO, EditorDTO, HeroBannerDTO, OrderDTO, PortfolioItemDTO, ReviewDTO, ServiceDTO } from "@/lib/types";
+import { DEFAULT_CONTENT, getContent, type ContentKey } from "@/lib/content";
 
 const dateToString = (value: Date) => value.toISOString();
 
@@ -20,7 +21,8 @@ async function getActiveBanner() {
 }
 
 export async function getPublicData() {
-  const [editors, services, reviews, banner, sections] = await Promise.all([
+  const contentKeys = Object.keys(DEFAULT_CONTENT) as ContentKey[];
+  const [editors, services, reviews, banner, sections, contentValues] = await Promise.all([
     prisma.editor.findMany({
       where: { isActive: true },
       orderBy: { createdAt: "asc" },
@@ -37,7 +39,8 @@ export async function getPublicData() {
       where: { isVisible: true },
       orderBy: { order: "asc" },
       include: { cards: { orderBy: { order: "asc" } } }
-    })
+    }),
+    Promise.all(contentKeys.map((key) => getContent(key)))
   ]);
 
   return {
@@ -99,7 +102,8 @@ export async function getPublicData() {
         linkUrl: card.linkUrl,
         order: card.order
       }))
-    }))
+    })),
+    content: Object.fromEntries(contentKeys.map((key, index) => [key, contentValues[index]]))
   };
 }
 

@@ -2,7 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { Quote, Star } from "lucide-react";
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, type KeyboardEvent } from "react";
 import type { ReviewDTO } from "@/lib/types";
 
 type ReviewsProps = {
@@ -72,7 +72,7 @@ export function Reviews({ reviews }: ReviewsProps) {
                   key={`${review.id}-${index}`}
                   className="embla__slide min-w-0 shrink-0 basis-[86%] sm:basis-[52%] lg:basis-[31%] xl:basis-[31%]"
                 >
-                  <div className="group relative h-full rounded-[1.6rem] border border-blue-500/15 bg-white/[0.035] p-4 transition-[box-shadow,border-color,background-color] duration-300 hover:border-blue-500/40 hover:bg-blue-500/[0.03] hover:shadow-blue sm:p-5">
+                  <div className="group relative h-full rounded-[1.6rem] border border-blue-500/15 bg-white/[0.035] p-4 sm:p-5">
                     <div className="pointer-events-none absolute inset-0 rounded-[1.6rem] bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_38%)] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                     <div className="relative z-10">
                       <Quote className="h-7 w-7 text-blue-500 transition-transform duration-200 group-hover:scale-110" />

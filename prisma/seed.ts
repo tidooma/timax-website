@@ -1,8 +1,36 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { DEFAULT_CONTENT } from "../lib/content";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const adminUsers = [
+    { username: "tima", role: "SUPER_ADMIN" as const },
+    { username: "max", role: "EDITOR" as const }
+  ];
+
+  for (const admin of adminUsers) {
+    const existing = await prisma.adminUser.findUnique({ where: { username: admin.username } });
+    if (!existing) {
+      const temporaryPassword = `${crypto.randomBytes(18).toString("base64url")}A1!`;
+      await prisma.adminUser.create({
+        data: {
+          username: admin.username,
+          passwordHash: await bcrypt.hash(temporaryPassword, 12),
+          role: admin.role,
+          mustChangePassword: true
+        }
+      });
+      console.log(`Temporary password for ${admin.username}: ${temporaryPassword}`);
+    }
+  }
+
+  for (const [key, data] of Object.entries(DEFAULT_CONTENT)) {
+    await prisma.siteContent.upsert({ where: { key }, create: { key, data }, update: {} });
+  }
+
   await prisma.order.deleteMany();
   await prisma.review.deleteMany();
   await prisma.service.deleteMany();

@@ -7,6 +7,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AdminRole {
+  SUPER_ADMIN
+  EDITOR
+  MODERATOR
+}
+
+model AdminUser {
+  id                String     @id @default(cuid())
+  username          String     @unique
+  passwordHash      String
+  role              AdminRole  @default(EDITOR)
+  isActive          Boolean    @default(true)
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean    @default(false)
+  mustChangePassword Boolean   @default(true)
+  permissions       String     @default("{}")
+  createdAt         DateTime   @default(now())
+  lastLoginAt       DateTime?
+  auditLogs         AuditLog[]
+  siteContent       SiteContent[]
+}
+
+model SiteContent {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  data          Json
+  updatedAt     DateTime  @updatedAt
+  updatedById   String?
+  updatedBy     AdminUser? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([updatedById])
+}
+
+model AuditLog {
+  id        String    @id @default(cuid())
+  userId    String?
+  username  String
+  action    String
+  entity    String?
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
 model Editor {
   id             String          @id @default(cuid())
   name           String

@@ -10,7 +10,17 @@ const navItems = [
   { label: "Портфолио", id: "portfolio" },
   { label: "Услуги", id: "services" },
   { label: "Отзывы", id: "reviews" },
+  { label: "О нас", id: "about" },
   { label: "Контакты", id: "contacts" }
+];
+
+const desktopNavItems = navItems.filter((item) => item.id !== "about");
+const mobileNavItems = [
+  ...navItems,
+  { label: "Как работаем", id: "workflow" },
+  { label: "Гарантии", id: "guarantees" },
+  { label: "FAQ", id: "faq" },
+  { label: "Советы", id: "tips" }
 ];
 
 type NavbarProps = {
@@ -107,7 +117,7 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
         </button>
 
         <nav className="hidden items-center gap-8 text-sm font-semibold lg:flex" aria-label="Главное меню">
-          {navItems.map((item) => {
+          {desktopNavItems.map((item) => {
             const isActive = activeSection === item.id;
 
             return (
@@ -184,7 +194,7 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
             </div>
 
             <div className="grid gap-2 pt-4">
-              {navItems.map((item) => (
+              {mobileNavItems.map((item) => (
                 <button
                   key={item.id}
                   type="button"

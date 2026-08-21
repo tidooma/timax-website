@@ -82,4 +82,5 @@ export type PublicDataDTO = {
   reviews: ReviewDTO[];
   banner: HeroBannerDTO | null;
   sections: CustomSectionDTO[];
+  content: Record<string, { title: string; description: string; items?: Array<{ title: string; description: string }> }>;
 };

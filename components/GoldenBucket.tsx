@@ -1,8 +1,6 @@
 "use client";
 
-import Lottie from "lottie-react";
-
-const glowAnimation = {
+export const glowAnimation = {
   v: "5.7.4",
   fr: 30,
   ip: 0,
@@ -65,7 +63,7 @@ export function GoldenBucket() {
       className="golden-bucket-float relative mx-auto h-64 w-64 md:h-80 md:w-80"
       aria-hidden="true"
     >
-      <Lottie animationData={glowAnimation} loop autoplay className="absolute inset-0 opacity-80" />
+      <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(255,215,0,0.28),rgba(255,165,0,0.08)_45%,transparent_72%)]" />
       <div className="bucket-glow absolute inset-8 overflow-hidden rounded-[2rem]">
         <div className="bucket-shimmer absolute inset-y-8 left-0 z-20 h-[70%] w-16 rotate-12 bg-white/40 blur-md" />
         <svg viewBox="0 0 260 260" className="relative z-10 h-full w-full" role="img">
