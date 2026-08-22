@@ -53,6 +53,7 @@ const fieldClass = "w-full rounded-2xl border border-white/10 bg-white/[0.08] px
 
 export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChange }: AdminSecurityProps) {
   const [setup, setSetup] = useState<{ secret: string; qrCode: string } | null>(null);
+  const [targetUserId, setTargetUserId] = useState(currentUserId ?? "");
   const [code, setCode] = useState("");
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
   const [message, setMessage] = useState("");
@@ -60,7 +61,7 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
 
   async function beginTwoFactorSetup() {
     setMessage("");
-    const response = await fetch("/api/admin/2fa", { method: "POST" });
+    const response = await fetch("/api/admin/2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId }) });
     const payload = (await response.json()) as { secret?: string; qrCode?: string; message?: string };
     if (!response.ok || !payload.secret || !payload.qrCode) {
       setMessage(payload.message || "Не удалось подготовить 2FA.");
@@ -72,7 +73,7 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
   async function confirmTwoFactor() {
     if (!setup || !code) return;
     setLoading(true);
-    const response = await fetch("/api/admin/2fa", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret: setup.secret, code }) });
+    const response = await fetch("/api/admin/2fa", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ secret: setup.secret, code, targetUserId }) });
     const payload = (await response.json()) as { message?: string };
     setLoading(false);
     setMessage(response.ok ? "2FA включена для аккаунта." : payload.message || "Не удалось включить 2FA.");
@@ -85,7 +86,7 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
 
   async function disableTwoFactor() {
     setLoading(true);
-    const response = await fetch("/api/admin/2fa", { method: "DELETE" });
+    const response = await fetch("/api/admin/2fa", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetUserId }) });
     setLoading(false);
     setMessage(response.ok ? "2FA отключена." : "Не удалось отключить 2FA.");
     if (response.ok) onUsersChange();
@@ -124,8 +125,9 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
       <section className="rounded-3xl border border-blue-500/25 bg-white/[0.045] p-5">
         <div className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 text-emerald-400" /><h2 className="font-days text-2xl tracking-normal">Двухфакторная защита</h2></div>
         <p className="mt-2 text-sm text-white/60">Подключите Google Authenticator, Яндекс Ключ или другое приложение TOTP.</p>
+        {isSuperAdmin ? <label className="mt-4 grid gap-2 text-sm font-semibold">Аккаунт для настройки 2FA<select className={fieldClass} value={targetUserId} onChange={(event) => { setTargetUserId(event.target.value); setSetup(null); setCode(""); }}><option value="">Выберите аккаунт</option>{users.map((user) => <option key={user.id} value={user.id}>{user.username} · {user.twoFactorEnabled ? "включена" : "не подключена"}</option>)}</select></label> : null}
         {!setup ? <button type="button" onClick={() => void beginTwoFactorSetup()} className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-200">Подключить 2FA</button> : <div className="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr]"><Image src={setup.qrCode} alt="QR-код для подключения 2FA" width={144} height={144} className="h-36 w-36 rounded-xl bg-white p-2" unoptimized /><div><p className="text-sm text-white/70">Отсканируйте QR-код. Если сканирование недоступно, используйте ключ:</p><code className="mt-2 block break-all rounded-xl bg-black/30 p-3 text-sm text-blue-200">{setup.secret}</code><input className={`${fieldClass} mt-3`} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Код из приложения" inputMode="numeric" /><button type="button" disabled={loading || code.length !== 6} onClick={() => void confirmTwoFactor()} className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-white disabled:opacity-50"><Check className="h-4 w-4" />Подтвердить</button></div></div>}
-        {users.find((user) => user.id === currentUserId)?.twoFactorEnabled ? <button type="button" disabled={loading} onClick={() => void disableTwoFactor()} className="mt-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 font-bold text-orange-200 disabled:opacity-50">Отключить 2FA</button> : null}
+        {users.find((user) => user.id === targetUserId)?.twoFactorEnabled ? <button type="button" disabled={loading} onClick={() => void disableTwoFactor()} className="mt-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 font-bold text-orange-200 disabled:opacity-50">Отключить 2FA</button> : null}
       </section>
 
       {isSuperAdmin ? (
