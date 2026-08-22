@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Film, Play, SlidersHorizontal } from "lucide-react";
+import { Film, Play, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SafeLogoImage } from "@/components/SafeLogoImage";
 import type { EditorDTO } from "@/lib/types";
@@ -164,8 +164,8 @@ export function Portfolio({ editors }: PortfolioProps) {
             </div>
 
             {/* Горизонтальная прокрутка портфолио с кастомным scrollbar */}
-            <div className="relative overflow-x-auto pb-4 pr-8 scrollbar-custom" aria-label="Портфолио, прокрутите вправо для просмотра следующих работ">
-              <div className="flex min-w-max gap-4">
+            <div className="overflow-x-auto px-1 pb-4 scrollbar-custom" aria-label="Портфолио с горизонтальной прокруткой">
+              <div className="flex min-w-max gap-4 pr-1">
                 {filteredItems.map((item) => (
                   <article
                     key={item.id}
@@ -185,12 +185,6 @@ export function Portfolio({ editors }: PortfolioProps) {
                   </article>
                 ))}
               </div>
-              {filteredItems.length > 1 ? (
-                <div className="pointer-events-none absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-l-full bg-black/60 py-2 pl-3 pr-2 text-[0.65rem] font-bold text-white/80 backdrop-blur-sm sm:hidden">
-                  <span>Листайте</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </div>
-              ) : null}
             </div>
 
             {!filteredItems.length ? (
