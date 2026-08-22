@@ -1,7 +1,6 @@
 "use client";
 
 import { Quote, Star } from "lucide-react";
-import { useMemo } from "react";
 import type { ReviewDTO } from "@/lib/types";
 
 type ReviewsProps = {
@@ -9,13 +8,6 @@ type ReviewsProps = {
 };
 
 export function Reviews({ reviews }: ReviewsProps) {
-  const loopedReviews = useMemo(() => {
-    if (!reviews.length) return [];
-
-    const targetLength = Math.max(reviews.length * 2, 8);
-    return Array.from({ length: targetLength }, (_, index) => reviews[index % reviews.length]);
-  }, [reviews]);
-
   return (
     <section id="reviews" className="section-surface relative scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -29,13 +21,13 @@ export function Reviews({ reviews }: ReviewsProps) {
           </div>
         </div>
 
-        {loopedReviews.length ? (
+        {reviews.length ? (
           /* Горизонтальная прокрутка отзывов с кастомным scrollbar */
           <div className="overflow-x-auto pb-4">
             <div className="flex min-w-max gap-3">
-              {loopedReviews.map((review, index) => (
+              {reviews.map((review) => (
                 <article
-                  key={`${review.id}-${index}`}
+                  key={review.id}
                   className="w-[76vw] max-w-[18rem] sm:w-[48%] sm:max-w-none lg:w-[31%]"
                 >
                   <div className="premium-card pixel-border h-full rounded-3xl border border-black/10 bg-black/[0.035] p-3 dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
