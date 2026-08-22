@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: "Неверный код подтверждения." }, { status: 400 });
   }
 
-  await prisma.adminUser.update({ where: { id: access.user.id }, data: { twoFactorSecret: secret, twoFactorEnabled: true } });
+  await prisma.adminUser.update({ where: { id: access.user.id }, data: { twoFactorSecret: secret, twoFactorEnabled: true, mustChangePassword: true } });
   await auditAdminAction({ request, userId: access.session.userId, username: access.session.username, action: "2FA_ENABLED", entity: access.user.username });
   return NextResponse.json({ ok: true });
 }
@@ -49,7 +49,7 @@ export async function DELETE(request: NextRequest) {
   const access = await getTargetUser(request, body?.targetUserId);
   if (!access?.user) return forbidden();
 
-  await prisma.adminUser.update({ where: { id: access.user.id }, data: { twoFactorSecret: null, twoFactorEnabled: false } });
+  await prisma.adminUser.update({ where: { id: access.user.id }, data: { twoFactorSecret: null, twoFactorEnabled: false, mustChangePassword: false } });
   await auditAdminAction({ request, userId: access.session.userId, username: access.session.username, action: "2FA_DISABLED", entity: access.user.username });
   return NextResponse.json({ ok: true });
 }

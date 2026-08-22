@@ -145,7 +145,7 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function AdminPanel({ role, username, userId, permissions }: { role: AdminRole; username: string; userId: string; permissions: Record<string, boolean> }) {
+export function AdminPanel({ role, username, userId, permissions, twoFactorEnabled }: { role: AdminRole; username: string; userId: string; permissions: Record<string, boolean>; twoFactorEnabled: boolean }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (role === "MODERATOR") return "orders";
@@ -866,7 +866,7 @@ export function AdminPanel({ role, username, userId, permissions }: { role: Admi
 
               {activeTab === "security" && ((role === "SUPER_ADMIN" && username === "tima") || permissions.change_password === true || permissions["security.manage"] === true) ? (
                 <div className="grid gap-3">
-                  <AdminSecurity currentUserId={userId} isSuperAdmin={role === "SUPER_ADMIN" && username === "tima"} users={adminUsers} onUsersChange={reloadAdminUsers} />
+                  <AdminSecurity currentUserId={userId} currentUserTwoFactorEnabled={twoFactorEnabled} isSuperAdmin={role === "SUPER_ADMIN" && username === "tima"} users={adminUsers} onUsersChange={reloadAdminUsers} />
                   <div className="px-1 pt-4">
                     <h2 className="font-days text-3xl tracking-normal">Журнал действий</h2>
                     <p className="mt-2 text-sm text-black/60 dark:text-white/60">Последние 100 событий входа и обращений к административному API.</p>

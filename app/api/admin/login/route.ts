@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   await prisma.adminUser.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await auditAdminAction({ request, userId: user.id, username: user.username, action: "LOGIN_SUCCESS", entity: "AdminUser" });
 
-  const response = NextResponse.json({ ok: true, role: user.role, mustChangePassword: user.mustChangePassword });
+  const response = NextResponse.json({ ok: true, role: user.role, mustChangePassword: user.mustChangePassword && user.twoFactorEnabled });
   let permissions: Record<string, boolean> = {};
   try { permissions = JSON.parse(user.permissions) as Record<string, boolean>; } catch { permissions = {}; }
   response.cookies.set(ADMIN_COOKIE, createAdminToken({ id: user.id, username: user.username, role: user.role, permissions }), adminCookieOptions);

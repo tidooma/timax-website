@@ -17,6 +17,7 @@ type AdminUser = {
 
 type AdminSecurityProps = {
   currentUserId?: string;
+  currentUserTwoFactorEnabled: boolean;
   isSuperAdmin: boolean;
   users: AdminUser[];
   onUsersChange: () => void;
@@ -51,13 +52,15 @@ const adminPermissions = CONTENT_PERMISSION_KEYS.filter((key) => !key.startsWith
 
 const fieldClass = "w-full rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/40 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15";
 
-export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChange }: AdminSecurityProps) {
+export function AdminSecurity({ currentUserId, currentUserTwoFactorEnabled, isSuperAdmin, users, onUsersChange }: AdminSecurityProps) {
   const [setup, setSetup] = useState<{ secret: string; qrCode: string } | null>(null);
   const [targetUserId, setTargetUserId] = useState(currentUserId ?? "");
   const [code, setCode] = useState("");
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const selectedUser = users.find((user) => user.id === targetUserId);
+  const targetTwoFactorEnabled = selectedUser?.twoFactorEnabled ?? currentUserTwoFactorEnabled;
 
   async function beginTwoFactorSetup() {
     setMessage("");
@@ -126,8 +129,8 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
         <div className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 text-emerald-400" /><h2 className="font-days text-2xl tracking-normal">Двухфакторная защита</h2></div>
         <p className="mt-2 text-sm text-white/60">Подключите Google Authenticator, Яндекс Ключ или другое приложение TOTP.</p>
         {isSuperAdmin ? <label className="mt-4 grid gap-2 text-sm font-semibold">Аккаунт для настройки 2FA<select className={fieldClass} value={targetUserId} onChange={(event) => { setTargetUserId(event.target.value); setSetup(null); setCode(""); }}><option value="">Выберите аккаунт</option>{users.map((user) => <option key={user.id} value={user.id}>{user.username} · {user.twoFactorEnabled ? "включена" : "не подключена"}</option>)}</select></label> : null}
-        {!setup ? <button type="button" onClick={() => void beginTwoFactorSetup()} className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-200">Подключить 2FA</button> : <div className="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr]"><Image src={setup.qrCode} alt="QR-код для подключения 2FA" width={144} height={144} className="h-36 w-36 rounded-xl bg-white p-2" unoptimized /><div><p className="text-sm text-white/70">Отсканируйте QR-код. Если сканирование недоступно, используйте ключ:</p><code className="mt-2 block break-all rounded-xl bg-black/30 p-3 text-sm text-blue-200">{setup.secret}</code><input className={`${fieldClass} mt-3`} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Код из приложения" inputMode="numeric" /><button type="button" disabled={loading || code.length !== 6} onClick={() => void confirmTwoFactor()} className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-white disabled:opacity-50"><Check className="h-4 w-4" />Подтвердить</button></div></div>}
-        {users.find((user) => user.id === targetUserId)?.twoFactorEnabled ? <button type="button" disabled={loading} onClick={() => void disableTwoFactor()} className="mt-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 font-bold text-orange-200 disabled:opacity-50">Отключить 2FA</button> : null}
+        {!setup ? <button type="button" disabled={targetTwoFactorEnabled} onClick={() => void beginTwoFactorSetup()} className="mt-4 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 font-bold text-blue-200 disabled:cursor-not-allowed disabled:opacity-60">{targetTwoFactorEnabled ? "2FA подключена" : "Подключить 2FA"}</button> : <div className="mt-4 grid gap-4 sm:grid-cols-[9rem_1fr]"><Image src={setup.qrCode} alt="QR-код для подключения 2FA" width={144} height={144} className="h-36 w-36 rounded-xl bg-white p-2" unoptimized /><div><p className="text-sm text-white/70">Отсканируйте QR-код. Если сканирование недоступно, используйте ключ:</p><code className="mt-2 block break-all rounded-xl bg-black/30 p-3 text-sm text-blue-200">{setup.secret}</code><input className={`${fieldClass} mt-3`} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Код из приложения" inputMode="numeric" /><button type="button" disabled={loading || code.length !== 6} onClick={() => void confirmTwoFactor()} className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 font-bold text-white disabled:opacity-50"><Check className="h-4 w-4" />Подтвердить</button></div></div>}
+        {targetTwoFactorEnabled ? <button type="button" disabled={loading} onClick={() => void disableTwoFactor()} className="mt-4 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 font-bold text-orange-200 disabled:opacity-50">Отключить 2FA</button> : null}
       </section>
 
       {isSuperAdmin ? (

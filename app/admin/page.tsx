@@ -10,11 +10,11 @@ export default async function AdminPage() {
 
   if (!session) return <AdminLogin />;
 
-  const user = await prisma.adminUser.findUnique({ where: { id: session.userId }, select: { permissions: true, isActive: true } });
+  const user = await prisma.adminUser.findUnique({ where: { id: session.userId }, select: { permissions: true, isActive: true, twoFactorEnabled: true } });
   if (!user?.isActive) return <AdminLogin />;
 
   let permissions: Record<string, boolean> = {};
   try { permissions = JSON.parse(user.permissions) as Record<string, boolean>; } catch { permissions = {}; }
 
-  return <AdminPanel role={session.role} username={session.username} userId={session.userId} permissions={permissions} />;
+  return <AdminPanel role={session.role} username={session.username} userId={session.userId} permissions={permissions} twoFactorEnabled={user.twoFactorEnabled} />;
 }
