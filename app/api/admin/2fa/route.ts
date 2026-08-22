@@ -23,11 +23,13 @@ export async function PUT(request: NextRequest) {
   if (!session || !isAdminRequest(request, "security.manage")) return forbidden();
 
   const body = (await request.json().catch(() => null)) as { secret?: string; code?: string } | null;
-  if (!body?.secret || !body.code || !verifySync({ token: body.code, secret: body.secret })) {
+  const secret = body?.secret;
+  const code = body?.code;
+  if (!secret || !code || !verifySync({ token: code, secret }).valid) {
     return NextResponse.json({ message: "Неверный код подтверждения." }, { status: 400 });
   }
 
-  await prisma.adminUser.update({ where: { id: session.userId }, data: { twoFactorSecret: body.secret, twoFactorEnabled: true } });
+  await prisma.adminUser.update({ where: { id: session.userId }, data: { twoFactorSecret: secret, twoFactorEnabled: true } });
   await auditAdminAction({ request, userId: session.userId, username: session.username, action: "2FA_ENABLED", entity: "AdminUser" });
   return NextResponse.json({ ok: true });
 }

@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (user.twoFactorEnabled) {
-    if (!body?.code || !user.twoFactorSecret || !verifySync({ token: body.code, secret: user.twoFactorSecret })) {
+    const verification = body?.code && user.twoFactorSecret
+      ? verifySync({ token: body.code, secret: user.twoFactorSecret })
+      : { valid: false };
+    if (!verification.valid) {
       return NextResponse.json({ message: "Введите корректный код двухфакторной аутентификации." }, { status: 401 });
     }
   }
