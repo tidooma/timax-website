@@ -1,6 +1,6 @@
 "use client";
 
-import { Film, Play, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Film, Play, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { SafeLogoImage } from "@/components/SafeLogoImage";
 import type { EditorDTO } from "@/lib/types";
@@ -112,7 +112,7 @@ export function Portfolio({ editors }: PortfolioProps) {
   }, [allItems, editorIds, priorityEditorId, selectedCategory]);
 
   return (
-    <section id="portfolio" className="section-surface relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
+    <section id="portfolio" className="section-surface relative scroll-mt-16 px-4 py-16 sm:scroll-mt-24 sm:px-6 sm:py-24 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
@@ -164,12 +164,12 @@ export function Portfolio({ editors }: PortfolioProps) {
             </div>
 
             {/* Горизонтальная прокрутка портфолио с кастомным scrollbar */}
-            <div className="overflow-x-auto pb-4">
+            <div className="relative overflow-x-auto pb-4 pr-8 scrollbar-custom" aria-label="Портфолио, прокрутите вправо для просмотра следующих работ">
               <div className="flex min-w-max gap-4">
                 {filteredItems.map((item) => (
                   <article
                     key={item.id}
-                    className="w-[88%] sm:w-[58%] lg:w-[38%] xl:w-[31%]"
+                    className="w-[72vw] max-w-[16rem] sm:w-[58%] sm:max-w-none lg:w-[38%] xl:w-[31%]"
                   >
                     <div className="premium-card pixel-border liquid-glass h-full overflow-hidden rounded-3xl border border-black/10 bg-black/[0.035] p-3 dark:border-white/10 dark:bg-white/[0.045]">
                       <PortfolioVideo youtubeId={item.youtubeId} title={item.title} />
@@ -185,6 +185,12 @@ export function Portfolio({ editors }: PortfolioProps) {
                   </article>
                 ))}
               </div>
+              {filteredItems.length > 1 ? (
+                <div className="pointer-events-none absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-l-full bg-black/60 py-2 pl-3 pr-2 text-[0.65rem] font-bold text-white/80 backdrop-blur-sm sm:hidden">
+                  <span>Листайте</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              ) : null}
             </div>
 
             {!filteredItems.length ? (
