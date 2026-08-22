@@ -129,7 +129,7 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
                     setSuccess(false);
                     onClose();
                   }}
-                  className="mt-6 rounded-2xl bg-blue-500 px-6 py-3 font-bold text-white shadow-blue"
+                  className="button-outline order-action-border mt-6 rounded-2xl bg-blue-500 px-6 py-3 font-bold text-white shadow-blue"
                 >
                   Готово
                 </button>
@@ -247,7 +247,7 @@ export function ExpressOrderForm({ open, onClose, defaultVideoType }: ExpressOrd
                 <button
                   type="submit"
                   disabled={loading || remainingFields.length > 0}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-6 py-4 font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="button-outline order-action-border inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-6 py-4 font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-5 w-5" />
                   {loading ? "Отправляем..." : "Отправить заявку"}

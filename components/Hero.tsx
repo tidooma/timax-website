@@ -76,7 +76,7 @@ function HeroActions({ onOrderOpen, playClick, compact = false }: HeroProps & { 
           playClick();
           document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
-        className={`tech-button inline-flex items-center justify-center gap-2 rounded-full font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 ${baseClass}`}
+        className={`button-outline tech-button inline-flex items-center justify-center gap-2 rounded-full bg-blue-500 font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-400 hover:brightness-110 ${baseClass}`}
       >
         <Play className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
         <span className={labelClass}>Смотреть работы</span>
@@ -87,7 +87,7 @@ function HeroActions({ onOrderOpen, playClick, compact = false }: HeroProps & { 
           playClick();
           onOrderOpen();
         }}
-        className={`tech-button-subtle inline-flex items-center justify-center gap-2 rounded-full font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-400/50 hover:bg-white/10 ${baseClass}`}
+        className={`button-outline order-action-border tech-button-subtle inline-flex items-center justify-center gap-2 rounded-full bg-blue-500 font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-400 hover:border-blue-400/50 ${baseClass}`}
       >
         <Send className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
         <span className={labelClass}>Экспресс заказ</span>

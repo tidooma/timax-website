@@ -26,6 +26,7 @@ export const CONTENT_PERMISSION_KEYS = [
   "orders.manage",
   "users.manage",
   "permissions.manage",
+  "change_password",
   "audit.view",
   "security.manage"
 ] as const;

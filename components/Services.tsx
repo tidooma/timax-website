@@ -7,9 +7,10 @@ import { AnimatedSection } from "@/components/AnimatedSection";
 
 type ServicesProps = {
   services: ServiceDTO[];
+  onOpenOrder: (videoType: string) => void;
 };
 
-export function Services({ services }: ServicesProps) {
+export function Services({ services, onOpenOrder }: ServicesProps) {
   return (
     <AnimatedSection id="services" className="section-surface relative scroll-mt-24 px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -22,8 +23,12 @@ export function Services({ services }: ServicesProps) {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {services.map((service, index) => (
-            <ServiceCard key={service.id} isPopular={service.isPopular}>
+          {services.map((service) => (
+            <ServiceCard
+              key={service.id}
+              isPopular={service.isPopular}
+              onClick={() => onOpenOrder(service.title)}
+            >
               {service.isPopular ? (
                 <div className="mb-5 inline-flex items-center gap-2 rounded-2xl bg-blue-500 px-3 py-2 text-xs font-bold text-white shadow-blue">
                   <Sparkles className="h-4 w-4" />

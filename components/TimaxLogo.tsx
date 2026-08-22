@@ -36,8 +36,9 @@ export function TimaxLogo({ compact = false, footer = false, hero = false, class
   return (
     <span
       aria-label="Timax"
-      className={`timax-wordmark relative inline-flex shrink-0 items-center justify-center text-current ${hero ? "timax-wordmark-hero" : ""} ${sizeClass} ${className}`}
+      className={`timax-wordmark relative inline-flex shrink-0 items-center justify-center overflow-visible text-current ${hero ? "timax-wordmark-hero" : ""} ${sizeClass} ${className}`}
     >
+      <span aria-hidden="true" className="logo-glow-effect" />
       <SafeLogoImage
         sources={WORDMARK_SOURCES}
         alt="Timax"

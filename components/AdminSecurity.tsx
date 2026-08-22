@@ -40,6 +40,7 @@ const permissionLabels: Record<string, string> = {
   "orders.manage": "Управлять заявками",
   "users.manage": "Управлять пользователями",
   "permissions.manage": "Управлять разрешениями",
+  change_password: "Смена пароля",
   "audit.view": "Просматривать журнал действий",
   "security.manage": "Управлять безопасностью"
 };
@@ -102,7 +103,10 @@ export function AdminSecurity({ currentUserId, isSuperAdmin, users, onUsersChang
 
   async function updateUser(user: AdminUser, changes: Record<string, unknown>) {
     const response = await fetch(`/api/admin/users/${user.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(changes) });
-    if (response.ok) onUsersChange();
+    if (response.ok) {
+      setMessage("Права обновлены. Пользователю нужно выйти и войти снова.");
+      onUsersChange();
+    }
   }
 
   return (

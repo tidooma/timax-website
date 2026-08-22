@@ -48,7 +48,6 @@ export function SiteShell({ data }: SiteShellProps) {
         <Portfolio editors={data.editors} />
         <Services
           services={data.services}
-          pricing={data.content.pricing}
           onOpenOrder={(videoType) => {
             openOrderForm(videoType);
           }}

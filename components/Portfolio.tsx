@@ -171,7 +171,7 @@ export function Portfolio({ editors }: PortfolioProps) {
                     key={item.id}
                     className="w-[88%] sm:w-[58%] lg:w-[38%] xl:w-[31%]"
                   >
-                    <div className="pixel-border animated-card liquid-glass h-full overflow-hidden rounded-3xl border border-black/10 bg-black/[0.035] p-3 transition hover:shadow-blue dark:border-white/10 dark:bg-white/[0.045]">
+                    <div className="premium-card pixel-border liquid-glass h-full overflow-hidden rounded-3xl border border-black/10 bg-black/[0.035] p-3 dark:border-white/10 dark:bg-white/[0.045]">
                       <PortfolioVideo youtubeId={item.youtubeId} title={item.title} />
                       <div className="p-3">
                         <div className="mb-2 inline-flex items-center gap-2 rounded-xl bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">
@@ -228,7 +228,7 @@ function PortfolioVideo({ youtubeId, title }: { youtubeId: string; title: string
         >
           <SafeLogoImage sources={[thumbnail]} alt="" className="absolute inset-0 h-full w-full object-cover" />
           <span className="absolute inset-0 bg-gradient-to-b from-black/[0.08] to-black/[0.42]" />
-          <span className="relative z-10 inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-blue transition group-hover:scale-[1.04]">
+          <span className="relative z-10 inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-500 text-white shadow-[0_6px_16px_rgba(15,23,42,0.28)] transition-colors duration-300 ease-out group-hover:bg-blue-400">
             <Play className="ml-1 h-6 w-6 fill-current" />
           </span>
         </button>

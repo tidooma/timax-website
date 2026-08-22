@@ -74,6 +74,171 @@ textarea {
   user-select: none;
 }
 
+.premium-card {
+  transition: border-color 300ms ease-out, box-shadow 300ms ease-out;
+}
+
+.premium-card:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow:
+    inset 0 0 0 1px rgba(96, 165, 250, 0.16),
+    0 8px 24px rgba(15, 23, 42, 0.22),
+    0 0 14px rgba(59, 130, 246, 0.08);
+}
+
+.button-outline {
+  border: 1px solid rgba(147, 197, 253, 0.5);
+}
+
+.order-submit-border {
+  position: relative;
+  isolation: isolate;
+  border: 2px solid rgba(96, 165, 250, 0.65);
+}
+
+.order-submit-border::before {
+  position: absolute;
+  z-index: 0;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid rgba(191, 219, 254, 0.95);
+  content: "";
+  animation: order-border-loading 2.4s ease-in-out infinite;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.45);
+}
+
+.order-submit-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+.order-action-border {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(96, 165, 250, 0.6);
+}
+
+.order-action-border::before {
+  position: absolute;
+  z-index: 0;
+  inset: -1px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: inherit;
+  content: "";
+  animation: order-border-loading 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.order-action-border > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes order-border-loading {
+  0% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+  }
+
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px rgba(96, 165, 250, 0.85), 0 0 28px rgba(59, 130, 246, 0.35);
+  }
+
+  100% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order-submit-border::before,
+  .order-action-border::before {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-card {
+    transition: none;
+  }
+}
+
+@keyframes logo-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes hero-logo-glow {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+.logo-glow-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 120%;
+  height: 120%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(37, 99, 235, 0.65) 0%,
+    rgba(29, 78, 216, 0.3) 42%,
+    transparent 70%
+  );
+  filter: blur(20px);
+  animation: logo-glow 3s ease-in-out infinite;
+}
+
+.timax-wordmark-hero .logo-glow-effect {
+  width: 145%;
+  height: 145%;
+  animation-name: hero-logo-glow;
+  animation-duration: 5s;
+  filter: blur(28px);
+}
+
+@media (max-width: 768px) {
+  .logo-glow-effect {
+    width: 100%;
+    height: 100%;
+    filter: blur(12px);
+  }
+
+  .timax-wordmark-hero .logo-glow-effect {
+    width: 115%;
+    height: 115%;
+    filter: blur(18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-glow-effect {
+    animation: none;
+    opacity: 0.5;
+    transform: translate(-50%, -50%);
+  }
+}
+
 .site-header {
   box-shadow:
     0 8px 24px rgba(29, 161, 242, 0.13),
@@ -159,10 +324,10 @@ textarea {
   contain: layout paint style;
   transform: translateZ(0);
   transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease;
+    transform 300ms ease-out,
+    border-color 300ms ease-out,
+    background-color 300ms ease-out,
+    box-shadow 300ms ease-out;
 }
 
 .order-modal-panel {
@@ -287,7 +452,7 @@ textarea {
     box-shadow:
       0 10px 24px rgba(29, 161, 242, 0.16),
       0 0 18px rgba(0, 212, 255, 0.1);
-    transform: translate3d(0, -2px, 0) scale(1.005);
+    transform: translate3d(0, -2px, 0);
   }
 }
 
@@ -355,8 +520,9 @@ textarea {
 
   .animated-card {
     transition:
-      border-color 180ms ease,
-      background-color 180ms ease,
-      box-shadow 180ms ease;
+      transform 300ms ease-out,
+      border-color 300ms ease-out,
+      background-color 300ms ease-out,
+      box-shadow 300ms ease-out;
   }
 }

@@ -6,7 +6,10 @@ import "./globals.css";
 const daysOne = Days_One({
   weight: "400",
   subsets: ["latin", "cyrillic"],
-  variable: "--font-days"
+  variable: "--font-days",
+  display: "swap",
+  preload: true,
+  fallback: ["Arial", "Helvetica", "sans-serif"]
 });
 
 export const metadata: Metadata = {
@@ -51,9 +54,10 @@ export const metadata: Metadata = {
     }
   },
   icons: {
-    icon: "/apple-touch-icon.png",
+    icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
-  }
+  },
+  manifest: "/manifest.json"
 };
 
 export default function RootLayout({

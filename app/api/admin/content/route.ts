@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { DEFAULT_CONTENT, type ContentKey } from "@/lib/content";
-import { auditAdminAction, getAdminFromRequest } from "@/lib/auth";
+import { auditAdminAction, getAdminFromRequest, isAdminRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 function keyFromRequest(request: NextRequest) {
@@ -14,11 +14,7 @@ async function authorize(request: NextRequest, key: ContentKey) {
   if (!session) return null;
   const user = await prisma.adminUser.findUnique({ where: { id: session.userId } });
   if (!user || !user.isActive) return null;
-  if (user.username !== "tima" && user.role !== "SUPER_ADMIN") {
-    let permissions: Record<string, boolean> = {};
-    try { permissions = JSON.parse(user.permissions) as Record<string, boolean>; } catch { permissions = {}; }
-    if (!permissions[`content.${key}.edit`]) return null;
-  }
+  if (!isAdminRequest(request, `content.${key}.edit`)) return null;
   return { session, user };
 }
 

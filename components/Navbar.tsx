@@ -156,7 +156,7 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
               playClick();
               onOrderOpen();
             }}
-            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-500 px-5 text-sm font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400"
+            className="button-outline inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-500 px-5 text-sm font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400"
           >
             <Send className="h-4 w-4" />
             Экспресс заказ
@@ -213,7 +213,7 @@ export function Navbar({ onOrderOpen }: NavbarProps) {
                 playClick();
                 onOrderOpen();
               }}
-              className="mt-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-4 font-bold text-white shadow-blue"
+              className="button-outline mt-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-4 font-bold text-white shadow-blue"
             >
               <Send className="h-5 w-5" />
               Экспресс заказ

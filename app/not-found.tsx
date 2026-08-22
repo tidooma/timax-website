@@ -82,7 +82,7 @@ export default function NotFound() {
         >
           <Link
             href="/"
-            className="tech-button inline-flex items-center justify-center rounded-full px-7 py-3.5 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/80 sm:px-8"
+            className="button-outline tech-button inline-flex items-center justify-center rounded-full bg-blue-500 px-7 py-3.5 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-400 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/80 sm:px-8"
           >
             Вернуться на главную
           </Link>

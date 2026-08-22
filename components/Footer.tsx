@@ -21,7 +21,7 @@ export function Footer() {
             href="https://t.me/timaxvideo"
             target="_blank"
             rel="noreferrer"
-            className="mt-7 inline-flex min-h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-blue-500 px-6 py-4 font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400"
+            className="button-outline mt-7 inline-flex min-h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-blue-500 px-6 py-4 font-bold text-white shadow-blue transition hover:scale-[1.02] hover:bg-blue-400"
           >
             <TelegramIcon className="h-6 w-6" />
             Telegram

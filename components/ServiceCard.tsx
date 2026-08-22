@@ -7,6 +7,7 @@ type ServiceCardProps = {
   children: ReactNode;
   className?: string;
   isPopular?: boolean;
+  onClick?: () => void;
 };
 
 /**
@@ -17,27 +18,25 @@ type ServiceCardProps = {
  * - Подсветка границ (border glow)
  * - Плавные переходы 0.4s
  */
-export function ServiceCard({ children, className = "", isPopular = false }: ServiceCardProps) {
+export function ServiceCard({ children, className = "", isPopular = false, onClick }: ServiceCardProps) {
   return (
     <motion.article
-      className={`relative overflow-hidden rounded-3xl border p-6 transition-colors ${
+      className={`premium-card relative overflow-hidden rounded-3xl border p-6 ${
         isPopular
           ? "border-blue-500/70 bg-blue-500/[0.12] shadow-blue"
           : "border-black/10 bg-black/[0.035] dark:border-white/10 dark:bg-white/[0.045]"
-      } ${className}`}
-      whileHover={{
-        scale: 1.03,
-        y: -5,
-        rotateX: 10,
-        boxShadow: isPopular
-          ? "0 20px 40px rgba(59, 130, 246, 0.3), 0 0 24px rgba(59, 130, 246, 0.2)"
-          : "0 20px 40px rgba(0, 0, 0, 0.2), 0 0 24px rgba(59, 130, 246, 0.15)"
+      } ${onClick ? "cursor-pointer" : ""} ${className}`}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (onClick && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick();
+        }
       }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
       style={{
-        perspective: 1000,
-        transformStyle: "preserve-3d",
-        willChange: "transform, box-shadow"
+        willChange: "box-shadow"
       }}
     >
       {/* Border glow effect */}

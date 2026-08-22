@@ -7,7 +7,7 @@ const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,}$
 
 export async function PUT(request: NextRequest) {
   const session = getAdminFromRequest(request);
-  if (!session || !isAdminRequest(request)) return NextResponse.json({ message: "Нужна авторизация." }, { status: 401 });
+  if (!session || !isAdminRequest(request, "change_password")) return NextResponse.json({ message: "Недостаточно прав для смены пароля." }, { status: 403 });
 
   const body = (await request.json().catch(() => null)) as { currentPassword?: string; newPassword?: string } | null;
   if (!body?.currentPassword || !body.newPassword || !passwordPattern.test(body.newPassword)) {

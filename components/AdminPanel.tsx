@@ -45,6 +45,12 @@ type AdminData = {
   orders: OrderDTO[];
 };
 
+type DataResource = {
+  tab: TabId;
+  key: keyof AdminData;
+  url: string;
+};
+
 const tabs: TabItem[] = [
   { id: "editors", label: "Редакторы", icon: UsersRound },
   { id: "portfolio", label: "Портфолио", icon: Film },
@@ -141,7 +147,20 @@ function formatDate(value: string) {
 
 export function AdminPanel({ role, username, userId, permissions }: { role: AdminRole; username: string; userId: string; permissions: Record<string, boolean> }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>(role === "MODERATOR" ? "orders" : "editors");
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    if (role === "MODERATOR") return "orders";
+    if (role === "EDITOR") {
+      if (permissions["content.editors.edit"]) return "editors";
+      if (permissions["content.portfolio.edit"]) return "portfolio";
+      if (permissions["content.pricing.edit"]) return "services";
+      if (permissions["content.reviews.edit"]) return "reviews";
+      if (permissions["content.hero.edit"]) return "banner";
+      if (permissions["content.sections.edit"]) return "sections";
+      if (permissions["orders.view"] || permissions["orders.manage"]) return "orders";
+      if (permissions.change_password || permissions["security.manage"]) return "security";
+    }
+    return "editors";
+  });
   const [data, setData] = useState<AdminData>(emptyData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -174,6 +193,7 @@ export function AdminPanel({ role, username, userId, permissions }: { role: Admi
       sections: ["content.sections.edit"],
       banner: ["content.hero.edit"],
       orders: ["orders.view", "orders.manage"],
+      security: ["change_password", "security.manage"],
       content: Object.keys(permissions).filter((permission) => permission.startsWith("content.") && permission.endsWith(".edit"))
     };
     return tabs.filter((tab) => (tabPermissions[tab.id] ?? []).some((permission) => permissions[permission] === true));
@@ -185,15 +205,23 @@ export function AdminPanel({ role, username, userId, permissions }: { role: Admi
     setLoading(true);
     setNotice("");
 
-    const responses = await Promise.all([
-      fetch("/api/admin/editors", { cache: "no-store" }),
-      fetch("/api/admin/portfolio", { cache: "no-store" }),
-      fetch("/api/admin/services", { cache: "no-store" }),
-      fetch("/api/admin/reviews", { cache: "no-store" }),
-      fetch("/api/admin/hero-banner", { cache: "no-store" }),
-      fetch("/api/admin/sections", { cache: "no-store" }),
-      fetch("/api/admin/orders", { cache: "no-store" })
-    ]);
+    const resources: DataResource[] = [
+      { tab: "editors", key: "editors", url: "/api/admin/editors" },
+      { tab: "portfolio", key: "portfolio", url: "/api/admin/portfolio" },
+      { tab: "services", key: "services", url: "/api/admin/services" },
+      { tab: "reviews", key: "reviews", url: "/api/admin/reviews" },
+      { tab: "banner", key: "banner", url: "/api/admin/hero-banner" },
+      { tab: "sections", key: "sections", url: "/api/admin/sections" },
+      { tab: "orders", key: "orders", url: "/api/admin/orders" }
+    ].filter((resource) => visibleTabs.some((tab) => tab.id === resource.tab)) as DataResource[];
+
+    if (!resources.length) {
+      setNotice("Нет доступа к разделам админ-панели.");
+      setLoading(false);
+      return;
+    }
+
+    const responses = await Promise.all(resources.map((resource) => fetch(resource.url, { cache: "no-store" })));
 
     if (responses.some((response) => response.status === 401)) {
       router.refresh();
@@ -206,13 +234,18 @@ export function AdminPanel({ role, username, userId, permissions }: { role: Admi
       return;
     }
 
-    const [editors, portfolio, services, reviews, banner, sections, orders] = await Promise.all(responses.map((response) => response.json()));
-    setData({ editors, portfolio, services, reviews, banner: banner ?? null, sections, orders });
-    if (knownOrderIds.current === null) {
-      knownOrderIds.current = new Set(orders.map((order: OrderDTO) => order.id));
-    }
+    const values = await Promise.all(responses.map((response) => response.json()));
+    setData((current) => {
+      const next = { ...current };
+      resources.forEach((resource, index) => {
+        next[resource.key] = resource.key === "banner" ? values[index] ?? null : values[index];
+      });
+      return next;
+    });
+    const orders = values[resources.findIndex((resource) => resource.key === "orders")];
+    if (orders && knownOrderIds.current === null) knownOrderIds.current = new Set(orders.map((order: OrderDTO) => order.id));
     setLoading(false);
-  }, [router]);
+  }, [router, visibleTabs]);
 
   async function mutate(url: string, method: string, body?: unknown) {
     setNotice("");
@@ -831,9 +864,9 @@ export function AdminPanel({ role, username, userId, permissions }: { role: Admi
                 </div>
               ) : null}
 
-              {activeTab === "security" && role === "SUPER_ADMIN" && username === "tima" ? (
+              {activeTab === "security" && ((role === "SUPER_ADMIN" && username === "tima") || permissions.change_password === true || permissions["security.manage"] === true) ? (
                 <div className="grid gap-3">
-                  <AdminSecurity currentUserId={userId} isSuperAdmin users={adminUsers} onUsersChange={reloadAdminUsers} />
+                  <AdminSecurity currentUserId={userId} isSuperAdmin={role === "SUPER_ADMIN" && username === "tima"} users={adminUsers} onUsersChange={reloadAdminUsers} />
                   <div className="px-1 pt-4">
                     <h2 className="font-days text-3xl tracking-normal">Журнал действий</h2>
                     <p className="mt-2 text-sm text-black/60 dark:text-white/60">Последние 100 событий входа и обращений к административному API.</p>

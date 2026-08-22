@@ -40,7 +40,7 @@ export function CustomSectionsFeed({ sections }: CustomSectionsFeedProps) {
                 return (
                   <article
                     key={card.id}
-                    className="rounded-3xl border border-blue-500/15 bg-white/[0.045] p-4"
+                    className="premium-card rounded-3xl border border-blue-500/15 bg-white/[0.045] p-4"
                   >
                     {card.linkUrl ? <a href={card.linkUrl} target="_blank" rel="noreferrer" className="block">{content}</a> : content}
                   </article>

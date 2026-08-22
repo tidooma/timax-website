@@ -10,7 +10,7 @@ function forbidden() {
 
 export async function POST(request: NextRequest) {
   const session = getAdminFromRequest(request);
-  if (!session || !isAdminRequest(request)) return forbidden();
+  if (!session || !isAdminRequest(request, "security.manage")) return forbidden();
 
   const secret = generateSecret();
   const uri = generateURI({ issuer: "Timax", label: session.username, secret });
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const session = getAdminFromRequest(request);
-  if (!session || !isAdminRequest(request)) return forbidden();
+  if (!session || !isAdminRequest(request, "security.manage")) return forbidden();
 
   const body = (await request.json().catch(() => null)) as { secret?: string; code?: string } | null;
   if (!body?.secret || !body.code || !verifySync({ token: body.code, secret: body.secret })) {
@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const session = getAdminFromRequest(request);
-  if (!session || !isAdminRequest(request)) return forbidden();
+  if (!session || !isAdminRequest(request, "security.manage")) return forbidden();
 
   await prisma.adminUser.update({ where: { id: session.userId }, data: { twoFactorSecret: null, twoFactorEnabled: false } });
   await auditAdminAction({ request, userId: session.userId, username: session.username, action: "2FA_DISABLED", entity: "AdminUser" });

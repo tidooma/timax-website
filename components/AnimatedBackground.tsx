@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Particle = {
   id: number;
@@ -19,11 +19,7 @@ type Particle = {
  * - Плавающие частицы которые медленно двигаются и мерцают
  */
 export function AnimatedBackground() {
-  const [particles, setParticles] = useState<Particle[]>([]);
-
-  useEffect(() => {
-    // Генерируем случайные частицы
-    const newParticles: Particle[] = Array.from({ length: 20 }, (_, i) => ({
+  const [particles] = useState<Particle[]>(() => Array.from({ length: 20 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
@@ -31,9 +27,7 @@ export function AnimatedBackground() {
       duration: Math.random() * 10 + 10,
       delay: Math.random() * 5,
       opacity: Math.random() * 0.5 + 0.2
-    }));
-    setParticles(newParticles);
-  }, []);
+    })));
 
   return (
     <div className="fixed inset-0 -z-20 overflow-hidden">

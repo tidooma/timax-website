@@ -65,13 +65,18 @@ export function getAdminFromRequest(request: NextRequest) {
   return verifyAdminToken(request.cookies.get(ADMIN_COOKIE)?.value);
 }
 
-export function isAdminRequest(request: NextRequest) {
+export function isAdminRequest(request: NextRequest, requiredPermission?: string) {
   const session = getAdminFromRequest(request);
   if (!session) return false;
 
   const path = request.nextUrl.pathname;
+  if (process.env.NODE_ENV !== "production") {
+    console.log("User permissions:", session.permissions);
+    console.log("Required permission:", requiredPermission ?? "path-based");
+  }
   void auditAdminAction({ request, userId: session.userId, username: session.username, action: `${request.method}_ACCESS`, entity: path }).catch(() => undefined);
   if (session.role === "SUPER_ADMIN") return true;
+  if (requiredPermission) return session.permissions[requiredPermission] === true;
   if (session.role === "MODERATOR") return path.startsWith("/api/admin/orders") && request.method === "GET" && session.permissions["orders.view"] === true;
   if (path.includes("/users") || path.includes("/security")) return false;
   if (session.role !== "EDITOR") return false;
@@ -82,7 +87,8 @@ export function isAdminRequest(request: NextRequest) {
       : path.includes("/portfolio") ? "content.portfolio.edit"
         : path.includes("/services") ? "content.pricing.edit"
           : path.includes("/reviews") ? "content.reviews.edit"
-            : path.includes("/sections") || path.includes("hero-banner") ? "content.sections.edit"
+              : path.includes("hero-banner") ? "content.hero.edit"
+                : path.includes("/sections") ? "content.sections.edit"
               : null;
 
   return Boolean(permission && session.permissions[permission] === true);

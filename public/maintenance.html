@@ -141,6 +141,27 @@
         font-weight: 600;
       }
 
+      .home-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 24px;
+        padding: 13px 24px;
+        border-radius: 999px;
+        background: var(--blue-strong);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.28);
+        transition: background-color 300ms ease-out, transform 300ms ease-out;
+      }
+
+      .home-link:hover {
+        background: #60a5fa;
+        transform: translateY(-2px);
+      }
+
       .loader {
         display: flex;
         align-items: center;
@@ -187,9 +208,11 @@
           <img class="bear" src="/images/bear-logo.png" alt="Timax bear" />
         </div>
 
-        <h1>Ведутся технические работы</h1>
-        <p>Скоро всё будет снова в работе.</p>
-        <div class="estimate">Вернёмся в течение часа</div>
+        <h1>Сайт временно недоступен</h1>
+        <p>Мы обновляем сайт. Пожалуйста, зайдите немного позже.</p>
+        <div class="estimate">Работаем над обновлением</div>
+
+        <a class="home-link" href="/">Вернуться на главную</a>
 
         <div class="loader" aria-label="Идёт обновление">
           <div class="loader-ring"></div>

@@ -38,7 +38,7 @@ export function Reviews({ reviews }: ReviewsProps) {
                   key={`${review.id}-${index}`}
                   className="w-[82%] sm:w-[48%] lg:w-[31%]"
                 >
-                  <div className="pixel-border animated-card h-full rounded-3xl border border-black/10 bg-black/[0.035] p-4 transition hover:border-blue-500/50 hover:shadow-blue dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
+                  <div className="premium-card pixel-border h-full rounded-3xl border border-black/10 bg-black/[0.035] p-4 dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
                     <Quote className="h-7 w-7 text-blue-500" />
                     <p className="mt-4 min-h-24 text-sm leading-6 text-black/70 dark:text-white/70">{review.text}</p>
                     <div className="mt-5 flex items-center justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/10">

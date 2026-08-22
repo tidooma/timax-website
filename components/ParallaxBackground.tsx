@@ -1,7 +1,7 @@
 "use client";
 
 import { useScroll, useTransform } from "framer-motion";
-import { CSSProperties, ReactNode } from "react";
+import { ReactNode } from "react";
 
 type ParallaxBackgroundProps = {
   children: ReactNode;

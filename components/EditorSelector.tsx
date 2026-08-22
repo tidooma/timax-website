@@ -30,7 +30,7 @@ export function EditorSelector({ editors, selectedEditorId, onSelect }: EditorSe
             type="button"
             key={editor.id}
             onClick={() => onSelect(editor.id)}
-            className={`pixel-border animated-card liquid-glass group min-h-32 rounded-3xl border p-5 text-left transition hover:-translate-y-0.5 ${
+            className={`premium-card pixel-border liquid-glass group min-h-32 rounded-3xl border p-5 text-left ${
               active
                 ? "border-blue-500/70 bg-blue-500/[0.12] shadow-blue"
                 : "border-black/10 bg-black/[0.03] dark:border-white/10 dark:bg-white/[0.04]"
