@@ -36,13 +36,13 @@ export function Reviews({ reviews }: ReviewsProps) {
               {loopedReviews.map((review, index) => (
                 <article
                   key={`${review.id}-${index}`}
-                  className="w-[82%] sm:w-[48%] lg:w-[31%]"
+                  className="w-[76vw] max-w-[18rem] sm:w-[48%] sm:max-w-none lg:w-[31%]"
                 >
-                  <div className="premium-card pixel-border h-full rounded-3xl border border-black/10 bg-black/[0.035] p-4 dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
-                    <Quote className="h-7 w-7 text-blue-500" />
-                    <p className="mt-4 min-h-24 text-sm leading-6 text-black/70 dark:text-white/70">{review.text}</p>
-                    <div className="mt-5 flex items-center justify-between gap-3 border-t border-black/10 pt-4 dark:border-white/10">
-                      <h3 className="font-days text-lg tracking-normal">{review.clientName}</h3>
+                  <div className="premium-card pixel-border h-full rounded-3xl border border-black/10 bg-black/[0.035] p-3 dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
+                    <Quote className="h-6 w-6 text-blue-500 sm:h-7 sm:w-7" />
+                    <p className="mt-3 min-h-20 text-[0.8125rem] leading-5 text-black/70 dark:text-white/70 sm:mt-4 sm:min-h-24 sm:text-sm sm:leading-6">{review.text}</p>
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-black/10 pt-3 dark:border-white/10 sm:mt-5 sm:pt-4">
+                      <h3 className="font-days text-base tracking-normal sm:text-lg">{review.clientName}</h3>
                       {review.rating ? (
                         <div className="flex gap-1 text-yellow-400">
                           {Array.from({ length: Math.min(review.rating, 5) }).map((_, starIndex) => (
